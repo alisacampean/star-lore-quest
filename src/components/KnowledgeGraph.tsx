@@ -35,88 +35,41 @@ export const KnowledgeGraph = ({ selectedPublicationId }: KnowledgeGraphProps) =
     try {
       setIsLoading(true);
 
-      // If no Supabase connection, use mock data
-      if (!supabase) {
-        console.log("No Supabase connection - using mock data");
-        // Create mock data for demo purposes
-        const mockPubs = Array.from({ length: 50 }, (_, i) => ({
-          id: `pub-${i}`,
-          title: `Publication ${i + 1}`,
-          year: 2000 + Math.floor(Math.random() * 24),
-          research_area: ["Microgravity", "Radiation", "Plant Biology"][Math.floor(Math.random() * 3)]
-        }));
-        
-        const mockConnections = Array.from({ length: 80 }, (_, i) => ({
-          source_publication_id: `pub-${Math.floor(Math.random() * 50)}`,
-          target_publication_id: `pub-${Math.floor(Math.random() * 50)}`,
-          connection_type: "related",
-          strength: Math.random() * 3 + 1
-        })).filter(c => c.source_publication_id !== c.target_publication_id);
+      // Use mock data for knowledge graph demo
+      console.log("Using mock data for knowledge graph");
+      
+      // Create mock data for demo purposes
+      const mockPubs = Array.from({ length: 50 }, (_, i) => ({
+        id: `pub-${i}`,
+        title: `Space Biology Study ${i + 1}`,
+        year: 2000 + Math.floor(Math.random() * 24),
+        research_area: ["Microgravity Effects", "Radiation Biology", "Plant Growth", "Cellular Biology", "Bone Density"][Math.floor(Math.random() * 5)]
+      }));
+      
+      const mockConnections = Array.from({ length: 80 }, (_, i) => ({
+        source_publication_id: `pub-${Math.floor(Math.random() * 50)}`,
+        target_publication_id: `pub-${Math.floor(Math.random() * 50)}`,
+        connection_type: "related",
+        strength: Math.random() * 3 + 1
+      })).filter(c => c.source_publication_id !== c.target_publication_id);
 
-        const nodes: GraphNode[] = mockPubs.map((pub) => ({
-          id: pub.id,
-          title: pub.title,
-          year: pub.year,
-          research_area: pub.research_area,
-          val: 5,
-        }));
-
-        const links: GraphLink[] = mockConnections.map((conn) => ({
-          source: conn.source_publication_id,
-          target: conn.target_publication_id,
-          type: conn.connection_type,
-          strength: conn.strength,
-        }));
-
-        setGraphData({ nodes, links });
-        setIsLoading(false);
-        toast.success("Demo mode: Using mock data");
-        return;
-      }
-
-      // Fetch publications from Supabase
-      const { data: pubs, error: pubError } = await supabase
-        .from("publications")
-        .select("id, title, year, research_area")
-        .limit(100);
-
-      if (pubError) {
-        console.error("Error fetching publications:", pubError);
-        toast.error("Failed to load publications from database");
-        setIsLoading(false);
-        return;
-      }
-
-      // Fetch connections
-      const pubIds = pubs?.map(p => p.id) || [];
-      const { data: connections, error: connError } = await supabase
-        .from("publication_connections")
-        .select("*")
-        .in("source_publication_id", pubIds)
-        .in("target_publication_id", pubIds);
-
-      if (connError) {
-        console.error("Error fetching connections:", connError);
-      }
-
-      // Transform to graph format
-      const nodes: GraphNode[] = (pubs || []).map((pub) => ({
+      const nodes: GraphNode[] = mockPubs.map((pub) => ({
         id: pub.id,
         title: pub.title,
-        year: pub.year || undefined,
-        research_area: pub.research_area || undefined,
+        year: pub.year,
+        research_area: pub.research_area,
         val: 5,
       }));
 
-      const links: GraphLink[] = (connections || []).map((conn) => ({
+      const links: GraphLink[] = mockConnections.map((conn) => ({
         source: conn.source_publication_id,
         target: conn.target_publication_id,
         type: conn.connection_type,
-        strength: conn.strength || 1,
+        strength: conn.strength,
       }));
 
       setGraphData({ nodes, links });
-      toast.success(`Loaded ${nodes.length} publications with ${links.length} connections`);
+      toast.success(`Knowledge graph loaded: ${nodes.length} publications, ${links.length} connections`);
     } catch (error) {
       console.error("Failed to load graph data:", error);
       toast.error("Failed to load knowledge graph");

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AIChat } from "@/components/AIChat";
 import { NecronButton } from "@/components/NecronButton";
@@ -6,6 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Assistant = () => {
   const navigate = useNavigate();
+  const [selectedQuestion, setSelectedQuestion] = useState<string | null>(null);
 
   return (
     <div className="min-h-screen bg-background">
@@ -45,7 +47,7 @@ const Assistant = () => {
       {/* Chat Interface */}
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          <AIChat />
+          <AIChat selectedQuestion={selectedQuestion} onQuestionHandled={() => setSelectedQuestion(null)} />
 
           {/* Suggested Questions */}
           <div className="mt-8 space-y-4">
@@ -62,10 +64,7 @@ const Assistant = () => {
                 <button
                   key={index}
                   className="circuit-frame bg-card p-4 text-left hover:bg-card/80 transition-all text-sm group"
-                  onClick={() => {
-                    // In a real implementation, this would trigger the chat
-                    console.log("Question clicked:", question);
-                  }}
+                  onClick={() => setSelectedQuestion(question)}
                 >
                   <p className="text-foreground/80 group-hover:text-foreground">
                     {question}

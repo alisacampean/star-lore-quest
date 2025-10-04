@@ -4,22 +4,37 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { NecronButton } from "./NecronButton";
 import { toast } from "sonner";
+import ReactMarkdown from "react-markdown";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
 }
 
-export const AIChat = () => {
+interface AIChatProps {
+  selectedQuestion?: string | null;
+  onQuestionHandled?: () => void;
+}
+
+export const AIChat = ({ selectedQuestion, onQuestionHandled }: AIChatProps = {}) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Welcome to the Space Biology Knowledge Engine. I'm here to help you explore NASA bioscience research. Ask me anything about space biology, microgravity effects, radiation studies, or specific publications!"
+      content: "# Welcome! 👋\n\nI'm your **Space Biology Knowledge Engine** assistant. I can help you explore NASA bioscience research.\n\n**Ask me about:**\n- Microgravity effects on biological systems\n- Radiation studies and space health\n- Specific research publications\n- Organisms studied on the ISS\n- Any space biology topic!"
     }
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
+
+  // Handle selected question from parent
+  useEffect(() => {
+    if (selectedQuestion) {
+      setInput(selectedQuestion);
+      onQuestionHandled?.();
+    }
+  }, [selectedQuestion, onQuestionHandled]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -32,25 +47,76 @@ export const AIChat = () => {
 
     const userMessage = input.trim();
     setInput("");
-    setMessages(prev => [...prev, { role: "user", content: userMessage }]);
+    const userMsg: Message = { role: "user", content: userMessage };
+    setMessages(prev => [...prev, userMsg]);
     setIsLoading(true);
 
+    let assistantContent = "";
+
     try {
-      // Simulate AI response - in production, this would call your AI backend
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const response = await fetch(CHAT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ 
+          messages: [...messages, userMsg].map(m => ({ role: m.role, content: m.content }))
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to get response");
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
       
-      const responses = [
-        "That's an interesting question about space biology! The effects of microgravity on biological systems have been studied extensively in various NASA missions.",
-        "Based on the research in our database, there are several key findings related to that topic. Would you like me to point you to specific publications?",
-        "Space biology research has shown fascinating adaptations of organisms in microgravity environments. This includes changes in cellular structure, gene expression, and metabolic processes.",
-        "The ISS has been instrumental in advancing our understanding of how space affects living organisms. Many experiments have focused on muscle atrophy, bone density loss, and immune system changes.",
-      ];
-      
-      const response = responses[Math.floor(Math.random() * responses.length)];
-      setMessages(prev => [...prev, { role: "assistant", content: response }]);
+      if (!reader) throw new Error("No response body");
+
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.trim() || line.startsWith(":")) continue;
+          if (!line.startsWith("data: ")) continue;
+
+          const data = line.slice(6).trim();
+          if (data === "[DONE]") continue;
+
+          try {
+            const parsed = JSON.parse(data);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) {
+              assistantContent += content;
+              setMessages(prev => {
+                const newMessages = [...prev];
+                const lastMsg = newMessages[newMessages.length - 1];
+                if (lastMsg?.role === "assistant") {
+                  lastMsg.content = assistantContent;
+                } else {
+                  newMessages.push({ role: "assistant", content: assistantContent });
+                }
+                return newMessages;
+              });
+            }
+          } catch (e) {
+            console.error("Parse error:", e);
+          }
+        }
+      }
     } catch (error) {
       console.error("Error:", error);
-      toast.error("Failed to get AI response. Please try again.");
+      toast.error(error instanceof Error ? error.message : "Failed to get AI response");
+      setMessages(prev => prev.filter(m => m !== userMsg));
     } finally {
       setIsLoading(false);
     }
@@ -93,7 +159,13 @@ export const AIChat = () => {
                     : "bg-card border border-primary/30"
                 }`}
               >
-                <p className="text-sm leading-relaxed">{message.content}</p>
+                {message.role === "assistant" ? (
+                  <div className="text-sm leading-relaxed prose prose-invert prose-sm max-w-none prose-headings:text-accent prose-a:text-primary prose-strong:text-accent prose-code:text-primary">
+                    <ReactMarkdown>{message.content}</ReactMarkdown>
+                  </div>
+                ) : (
+                  <p className="text-sm leading-relaxed">{message.content}</p>
+                )}
               </div>
               {message.role === "user" && (
                 <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
