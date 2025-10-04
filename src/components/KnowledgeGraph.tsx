@@ -35,15 +35,9 @@ export const KnowledgeGraph = ({ selectedPublicationId }: KnowledgeGraphProps) =
     try {
       setIsLoading(true);
 
-      // Fetch publications (limit to first 100 for performance)
-      const { data: pubs, error: pubError } = await supabase
-        .from("publications")
-        .select("id, title, year, research_area")
-        .limit(100);
-
-      if (pubError) {
-        console.error("Error fetching publications:", pubError);
-        toast.error("Failed to load publications");
+      // If no Supabase connection, use mock data
+      if (!supabase) {
+        console.log("No Supabase connection - using mock data");
         // Create mock data for demo purposes
         const mockPubs = Array.from({ length: 50 }, (_, i) => ({
           id: `pub-${i}`,
@@ -75,6 +69,20 @@ export const KnowledgeGraph = ({ selectedPublicationId }: KnowledgeGraphProps) =
         }));
 
         setGraphData({ nodes, links });
+        setIsLoading(false);
+        toast.success("Demo mode: Using mock data");
+        return;
+      }
+
+      // Fetch publications from Supabase
+      const { data: pubs, error: pubError } = await supabase
+        .from("publications")
+        .select("id, title, year, research_area")
+        .limit(100);
+
+      if (pubError) {
+        console.error("Error fetching publications:", pubError);
+        toast.error("Failed to load publications from database");
         setIsLoading(false);
         return;
       }

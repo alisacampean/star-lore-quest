@@ -40,6 +40,10 @@ const Explorer = () => {
   const { data: count } = useQuery({
     queryKey: ["publications-count"],
     queryFn: async () => {
+      if (!supabase) {
+        return 608; // Mock count when no database
+      }
+      
       const { count, error } = await supabase
         .from("publications")
         .select("*", { count: "exact", head: true });
