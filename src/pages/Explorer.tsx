@@ -56,8 +56,46 @@ const Explorer = () => {
     },
   });
 
-  // For now, use mock data. In production, this would query Supabase
-  const publications = mockPublications;
+  // Apply filters and search to publications
+  const filteredPublications = mockPublications.filter((pub) => {
+    // Search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const matchesSearch = 
+        pub.title.toLowerCase().includes(query) ||
+        pub.abstract?.toLowerCase().includes(query) ||
+        pub.authors?.toLowerCase().includes(query);
+      
+      if (!matchesSearch) return false;
+    }
+
+    // Year range filter
+    if (filters.yearRange[0] && pub.year && pub.year < filters.yearRange[0]) {
+      return false;
+    }
+    if (filters.yearRange[1] && pub.year && pub.year > filters.yearRange[1]) {
+      return false;
+    }
+
+    // Organism filter
+    if (filters.organisms.length > 0 && pub.organism) {
+      if (!filters.organisms.includes(pub.organism)) return false;
+    }
+
+    // Research area filter
+    if (filters.researchArea.length > 0 && pub.research_area) {
+      if (!filters.researchArea.includes(pub.research_area)) return false;
+    }
+
+    // Experiment type filter
+    if (filters.experimentType.length > 0 && pub.experiment_type) {
+      if (!filters.experimentType.includes(pub.experiment_type)) return false;
+    }
+
+    return true;
+  });
+
+  const publications = filteredPublications;
   const isLoading = false;
 
   useEffect(() => {
