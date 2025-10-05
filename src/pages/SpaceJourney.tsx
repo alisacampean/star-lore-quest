@@ -131,8 +131,17 @@ export default function SpaceJourney() {
       }
     };
 
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      container.scrollLeft += e.deltaY;
+    };
+
     container.addEventListener('scroll', handleScroll);
-    return () => container.removeEventListener('scroll', handleScroll);
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+      container.removeEventListener('wheel', handleWheel);
+    };
   }, []);
 
   const handleTopicClick = (topicId: string) => {
@@ -254,17 +263,8 @@ export default function SpaceJourney() {
       {/* Scrollable container - needed for absolute positioned asteroids */}
       <div 
         ref={containerRef}
-        className="w-full h-full overflow-x-auto overflow-y-hidden scroll-smooth"
-        style={{ 
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none'
-        }}
+        className="w-full h-full overflow-x-auto overflow-y-hidden scroll-smooth pb-4"
       >
-        <style>{`
-          div::-webkit-scrollbar {
-            display: none;
-          }
-        `}</style>
         
         {/* Wide content area */}
         <div className="relative h-full" style={{ width: '800vw' }}>
