@@ -133,60 +133,96 @@ serve(async (req) => {
     }
 
     console.log(`Parsed ${publications.length} publications`);
-
-    // Clear existing publications
-    const { error: deleteError } = await supabase
-      .from("publications")
-      .delete()
-      .neq("id", "00000000-0000-0000-0000-000000000000");
-
-    if (deleteError) {
-      console.error("Error clearing publications:", deleteError);
-    }
-
-    // Process publications with summaries in smaller batches
-    let inserted = 0;
-    const batchSize = 5; // Small batch to avoid rate limits
     
-    for (let i = 0; i < publications.length; i += batchSize) {
-      const batch = publications.slice(i, i + batchSize);
-      console.log(`Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(publications.length / batchSize)}`);
-      
-      // Fetch and summarize each publication
-      const enrichedBatch = await Promise.all(
-        batch.map(async (pub) => {
-          const abstract = await fetchAndSummarize(pub.link, lovableApiKey);
-          
-          // Add delay between requests to avoid rate limiting
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          return {
-            title: pub.title,
-            link: pub.link,
-            abstract: abstract || "Summary unavailable for this publication.",
-          };
-        })
-      );
-      
-      const { error: insertError } = await supabase
-        .from("publications")
-        .insert(enrichedBatch);
-      
-      if (insertError) {
-        console.error('Error inserting batch:', insertError);
-      } else {
-        inserted += batch.length;
-        console.log(`Processed and inserted: ${inserted}/${publications.length}`);
-      }
-      
-      // Add delay between batches
-      await new Promise(resolve => setTimeout(resolve, 1000));
+    // Read pagination params from request body
+    let offset = 0;
+    let limit = 5;
+    let reset = false;
+    try {
+      const body = await req.json();
+      offset = Number.isFinite(body?.offset) ? Math.max(0, Math.floor(body.offset)) : 0;
+      limit = Number.isFinite(body?.limit) ? Math.max(1, Math.min(10, Math.floor(body.limit))) : 5; // cap to 10 per run
+      reset = Boolean(body?.reset);
+    } catch (_) {
+      // no body provided; defaults used
     }
+
+    const total = publications.length;
+    const end = Math.min(offset + limit, total);
+    const batch = publications.slice(offset, end);
+
+    console.log(`Processing offset ${offset} to ${end} of ${total} (size=${batch.length})`);
+
+    // Optionally clear existing publications on first run
+    if (reset && offset === 0) {
+      const { error: deleteAllError } = await supabase
+        .from("publications")
+        .delete()
+        .neq("id", "00000000-0000-0000-0000-000000000000");
+
+      if (deleteAllError) {
+        console.error("Error clearing publications:", deleteAllError);
+      } else {
+        console.log("Cleared existing publications (reset=true)");
+      }
+    }
+
+    // Fetch and summarize each publication in this batch
+    const enrichedBatch = await Promise.all(
+      batch.map(async (pub) => {
+        const abstract = await fetchAndSummarize(pub.link, lovableApiKey);
+        
+        // Add small delay between requests to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        return {
+          title: pub.title,
+          link: pub.link,
+          abstract: abstract || "Summary unavailable for this publication.",
+        };
+      })
+    );
+    
+    // Remove potential duplicates by link before insert
+    try {
+      const links = enrichedBatch.map(p => p.link).filter(Boolean);
+      if (links.length > 0) {
+        const { error: delDupError } = await supabase
+          .from("publications")
+          .delete()
+          .in("link", links);
+        if (delDupError) console.warn("Duplicate cleanup error:", delDupError);
+      }
+    } catch (e) {
+      console.warn("Duplicate cleanup step failed:", e);
+    }
+    
+    const { error: insertError } = await supabase
+      .from("publications")
+      .insert(enrichedBatch);
+    
+    if (insertError) {
+      console.error("Error inserting batch:", insertError);
+      return new Response(
+        JSON.stringify({ success: false, error: insertError.message }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const nextOffset = end;
+    const done = nextOffset >= total;
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Imported ${inserted} publications out of ${publications.length} parsed with AI-generated summaries`,
+        inserted: enrichedBatch.length,
+        total,
+        nextOffset,
+        done,
+        message: `Imported ${nextOffset}/${total}`,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

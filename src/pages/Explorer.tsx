@@ -96,24 +96,45 @@ const Explorer = () => {
   };
 
   const handleImport = async () => {
+    const limit = 5; // Keep small to avoid function timeouts
+    let offset = 0;
+    let total = 0;
+    let done = false;
+    let firstRun = true;
+
+    const toastId = toast.loading("Starting import... This may take several minutes. Please keep this tab open.", {
+      duration: Infinity,
+    });
+
     try {
-      const toastId = toast.loading("Starting import with AI summary generation... This will take 10-15 minutes for all publications.", {
-        duration: Infinity,
-      });
-      
-      const response = await supabase.functions.invoke("import-publications");
-      
-      toast.dismiss(toastId);
-      
-      if (response.error) {
-        toast.error(`Import failed: ${response.error.message}`);
-      } else {
-        toast.success(response.data.message || "Publications imported successfully with AI summaries!");
-        setTimeout(() => window.location.reload(), 2000); // Refresh to show new data
+      while (!done) {
+        const { data, error } = await supabase.functions.invoke("import-publications", {
+          body: { offset, limit, reset: firstRun },
+        });
+
+        if (error) {
+          throw new Error(error.message || "Edge Function error");
+        }
+
+        total = data?.total ?? total;
+        offset = data?.nextOffset ?? offset + limit;
+        done = Boolean(data?.done);
+        firstRun = false;
+
+        // Lightweight progress feedback
+        toast.message(`Imported ${Math.min(offset, total)} of ${total}`);
+
+        // Brief pause between batches to reduce rate limiting
+        await new Promise((r) => setTimeout(r, 500));
       }
+
+      toast.dismiss(toastId);
+      toast.success(`Import complete: ${offset}/${total} publications.`);
+      setTimeout(() => window.location.reload(), 1500); // Refresh to show new data
     } catch (error) {
-      toast.error("Failed to import publications");
       console.error(error);
+      toast.dismiss(toastId);
+      toast.error(`Import failed: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
   };
 
