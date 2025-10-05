@@ -164,7 +164,7 @@ export const AIChat = ({ selectedQuestion, onQuestionHandled }: AIChatProps = {}
                     prose-headings:text-accent prose-headings:font-bold prose-headings:mb-3 prose-headings:mt-4
                     prose-p:my-3 prose-p:leading-7
                     prose-a:text-primary prose-a:underline prose-a:decoration-primary/50 hover:prose-a:decoration-primary
-                    prose-strong:text-accent prose-strong:font-bold
+                    prose-strong:text-primary prose-strong:font-bold
                     prose-em:text-primary/90
                     prose-code:text-primary prose-code:bg-primary/10 prose-code:px-1 prose-code:rounded
                     prose-ul:my-3 prose-ul:space-y-2 prose-li:my-1
