@@ -29,9 +29,9 @@ const Explorer = () => {
     queryFn: async () => {
       let query = supabase.from("publications").select("*");
 
-      // Apply search filter
+      // Apply search filter across multiple fields
       if (searchQuery) {
-        query = query.ilike("title", `%${searchQuery}%`);
+        query = query.or(`title.ilike.%${searchQuery}%,abstract.ilike.%${searchQuery}%,authors.ilike.%${searchQuery}%`);
       }
 
       // Apply year range filter
