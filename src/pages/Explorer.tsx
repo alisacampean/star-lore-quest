@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Publication } from "@/types/publication";
 import { PublicationCard } from "@/components/PublicationCard";
-import { PublicationFilters } from "@/components/PublicationFilters";
+
 import { SearchBar } from "@/components/SearchBar";
 import { NecronButton } from "@/components/NecronButton";
 import { Database, Download, Loader2, Home, Brain, Network } from "lucide-react";
@@ -55,7 +55,7 @@ const Explorer = () => {
 
   // Fetch publications from database
   const { data: publications = [], isLoading } = useQuery({
-    queryKey: ["publications", searchQuery, filters],
+    queryKey: ["publications", searchQuery],
     queryFn: async () => {
       let query = supabase.from("publications").select("*");
 
@@ -64,77 +64,6 @@ const Explorer = () => {
         query = query.or(`title.ilike.%${searchQuery}%,abstract.ilike.%${searchQuery}%,authors.ilike.%${searchQuery}%`);
       }
 
-      // Apply year range filter
-      if (filters.yearRange[0]) {
-        query = query.gte("year", filters.yearRange[0]);
-      }
-      if (filters.yearRange[1]) {
-        query = query.lte("year", filters.yearRange[1]);
-      }
-
-      // Apply organism filter with synonyms and case-insensitive matching
-      if (filters.organisms.length > 0) {
-        const ORGANISM_SYNONYMS: Record<string, string[]> = {
-          "Humans": ["human", "homo sapiens"],
-          "Mice": ["mouse", "mice", "murine", "mus musculus"],
-          "Rats": ["rat", "rattus"],
-          "C. elegans": ["c. elegans", "caenorhabditis elegans"],
-          "Drosophila": ["drosophila", "fruit fly", "d. melanogaster", "drosophila melanogaster"],
-          "Plants": ["plant", "arabidopsis", "zea mays", "oryza", "glycine max"],
-          "Bacteria": ["bacteria", "bacterium", "e. coli", "escherichia coli", "bacillus"],
-          "Yeast": ["yeast", "saccharomyces cerevisiae"],
-          "Other": []
-        };
-        const organismConditions = filters.organisms
-          .flatMap(org => (ORGANISM_SYNONYMS[org] && ORGANISM_SYNONYMS[org].length > 0) ? ORGANISM_SYNONYMS[org] : [org])
-          .map(s => `organism.ilike.%${s}%`)
-          .join(',');
-        if (organismConditions) {
-          query = query.or(organismConditions);
-        }
-      }
-
-      // Apply research area filter with synonyms and case-insensitive matching
-      if (filters.researchArea.length > 0) {
-        const AREA_SYNONYMS: Record<string, string[]> = {
-          "Microgravity Effects": ["microgravity", "spaceflight", "space flight", "weightlessness", "gravity unloading"],
-          "Radiation Biology": ["radiation", "cosmic radiation", "ionizing radiation", "space radiation"],
-          "Life Support": ["life support", "eclss", "environmental control", "closed-loop"],
-          "Plant Biology": ["plant", "botany", "crop"],
-          "Neuroscience": ["neuro", "brain", "cns"],
-          "Cardiovascular": ["cardio", "heart", "vascular"],
-          "Bone & Muscle": ["bone", "muscle", "skeletal", "osteoporosis", "atrophy"],
-          "Immunology": ["immune", "immunology", "inflammation"],
-          "Genetics": ["genetic", "genomics", "gene", "transcriptomic"],
-          "Other": []
-        };
-        const areaConditions = filters.researchArea
-          .flatMap(a => (AREA_SYNONYMS[a] && AREA_SYNONYMS[a].length > 0) ? AREA_SYNONYMS[a] : [a])
-          .map(s => `research_area.ilike.%${s}%`)
-          .join(',');
-        if (areaConditions) {
-          query = query.or(areaConditions);
-        }
-      }
-
-      // Apply experiment type filter with synonyms and case-insensitive matching
-      if (filters.experimentType.length > 0) {
-        const TYPE_SYNONYMS: Record<string, string[]> = {
-          "ISS Mission": ["iss", "international space station", "space station", "mission"],
-          "Space Shuttle": ["space shuttle", "sts"],
-          "Ground Analog": ["ground analog", "bed rest", "hindlimb unloading", "hind limb unloading"],
-          "Parabolic Flight": ["parabolic flight", "parabola", "parabolic"],
-          "Laboratory Study": ["laboratory", "in vitro", "in vivo", "bench"],
-          "Field Study": ["field study", "fieldwork", "observational"]
-        };
-        const typeConditions = filters.experimentType
-          .flatMap(t => (TYPE_SYNONYMS[t] && TYPE_SYNONYMS[t].length > 0) ? TYPE_SYNONYMS[t] : [t])
-          .map(s => `experiment_type.ilike.%${s}%`)
-          .join(',');
-        if (typeConditions) {
-          query = query.or(typeConditions);
-        }
-      }
 
       const { data, error } = await query.order("created_at", { ascending: false }).limit(100);
 
@@ -267,14 +196,11 @@ const Explorer = () => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-4 gap-8">
+        <div className="grid gap-8">
           {/* Filters Sidebar */}
-          <div className="lg:col-span-1">
-            <PublicationFilters filters={filters} onFiltersChange={handleFiltersChange} />
-          </div>
 
           {/* Publications Grid */}
-          <div className="lg:col-span-3">
+          <div>
             {isLoading ? (
               <div className="flex items-center justify-center h-64">
                 <div className="text-center space-y-4">
@@ -287,7 +213,6 @@ const Explorer = () => {
                 <div className="mb-4 text-sm text-muted-foreground font-mono">
                   Showing {publications.length} results
                   {searchQuery && ` for "${searchQuery}"`}
-                  {!searchQuery && (filters.organisms.length > 0 || filters.researchArea.length > 0 || filters.experimentType.length > 0 || filters.yearRange[0] || filters.yearRange[1]) && " (filtered)"}
                 </div>
                 <div className="grid gap-6">
                   {publications.map((publication) => (
