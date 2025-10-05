@@ -161,34 +161,41 @@ export const AIChat = ({ selectedQuestion, onQuestionHandled }: AIChatProps = {}
               >
                 {message.role === "assistant" ? (
                   <div className="text-sm leading-relaxed prose prose-invert prose-sm max-w-none 
-                    prose-headings:text-accent prose-headings:font-bold prose-headings:mb-3 prose-headings:mt-4
-                    prose-p:my-3 prose-p:leading-7
-                    prose-a:text-primary prose-a:underline prose-a:decoration-primary/50 hover:prose-a:decoration-primary
+                    prose-headings:text-primary prose-headings:font-bold prose-headings:mb-4 prose-headings:mt-6 prose-headings:text-base
+                    prose-p:my-4 prose-p:leading-8
+                    prose-a:text-primary prose-a:no-underline prose-a:font-medium prose-a:bg-primary/10 prose-a:px-1.5 prose-a:py-0.5 prose-a:rounded hover:prose-a:bg-primary/20 hover:prose-a:underline
                     prose-strong:text-accent prose-strong:font-bold
-                    prose-em:text-primary/90
-                    prose-code:text-primary prose-code:bg-primary/10 prose-code:px-1 prose-code:rounded
-                    prose-ul:my-3 prose-ul:space-y-2 prose-li:my-1
-                    prose-ol:my-3 prose-ol:space-y-2
-                    [&_mark]:bg-primary/30 [&_mark]:text-primary [&_mark]:px-1 [&_mark]:rounded [&_mark]:font-semibold">
+                    prose-em:text-primary/80 prose-em:not-italic
+                    prose-code:text-primary prose-code:bg-primary/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs
+                    prose-ul:my-4 prose-ul:space-y-2.5 prose-ul:ml-4
+                    prose-ol:my-4 prose-ol:space-y-2.5 prose-ol:ml-4
+                    prose-li:my-2 prose-li:leading-7
+                    [&_mark]:bg-primary [&_mark]:text-primary-foreground [&_mark]:px-2 [&_mark]:py-0.5 [&_mark]:rounded [&_mark]:font-semibold [&_mark]:shadow-sm">
                     <ReactMarkdown
                       components={{
-                        // Convert ==highlight== to <mark> tags
-                        p: ({ children }) => {
-                          if (typeof children === 'string') {
-                            const parts = children.split(/(==.*?==)/g);
-                            return (
-                              <p>
-                                {parts.map((part, i) => {
-                                  if (part.startsWith('==') && part.endsWith('==')) {
-                                    return <mark key={i}>{part.slice(2, -2)}</mark>;
-                                  }
-                                  return part;
-                                })}
-                              </p>
-                            );
-                          }
-                          return <p>{children}</p>;
-                        }
+                        // Convert ==highlight== to <mark> tags with proper handling
+                        p: ({ children, ...props }) => {
+                          const processChildren = (child: any): any => {
+                            if (typeof child === 'string') {
+                              const parts = child.split(/(==.+?==)/g);
+                              return parts.map((part, i) => {
+                                if (part.startsWith('==') && part.endsWith('==')) {
+                                  return <mark key={i}>{part.slice(2, -2)}</mark>;
+                                }
+                                return part;
+                              });
+                            }
+                            if (Array.isArray(child)) {
+                              return child.map(processChildren);
+                            }
+                            return child;
+                          };
+
+                          return <p {...props}>{processChildren(children)}</p>;
+                        },
+                        // Ensure lists have proper spacing
+                        ul: ({ children, ...props }) => <ul className="space-y-2" {...props}>{children}</ul>,
+                        ol: ({ children, ...props }) => <ol className="space-y-2" {...props}>{children}</ol>,
                       }}
                     >
                       {message.content}
