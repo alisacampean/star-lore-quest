@@ -16,22 +16,40 @@ export type Database = {
     Tables: {
       publications: {
         Row: {
+          abstract: string | null
+          authors: string | null
           created_at: string
+          experiment_type: string | null
           id: string
           link: string
+          organism: string | null
+          research_area: string | null
           title: string
+          year: number | null
         }
         Insert: {
+          abstract?: string | null
+          authors?: string | null
           created_at?: string
+          experiment_type?: string | null
           id?: string
           link: string
+          organism?: string | null
+          research_area?: string | null
           title: string
+          year?: number | null
         }
         Update: {
+          abstract?: string | null
+          authors?: string | null
           created_at?: string
+          experiment_type?: string | null
           id?: string
           link?: string
+          organism?: string | null
+          research_area?: string | null
           title?: string
+          year?: number | null
         }
         Relationships: []
       }

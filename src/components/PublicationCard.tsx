@@ -18,12 +18,6 @@ export const PublicationCard = ({ publication }: PublicationCardProps) => {
         <h3 className="text-lg font-bold font-mono text-primary">
           {publication.title}
         </h3>
-        
-        {publication.abstract && (
-          <p className="text-sm text-foreground/80 line-clamp-3">
-            {publication.abstract}
-          </p>
-        )}
 
         <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
           {publication.year && (
@@ -52,6 +46,20 @@ export const PublicationCard = ({ publication }: PublicationCardProps) => {
             </Badge>
           )}
         </div>
+        
+        {/* Summary Section */}
+        {publication.abstract ? (
+          <div className="space-y-2 pt-2 border-t border-primary/20">
+            <h4 className="text-xs font-bold font-mono text-accent uppercase">Summary</h4>
+            <p className="text-sm text-foreground/80 line-clamp-4">
+              {publication.abstract}
+            </p>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground italic pt-2 border-t border-primary/20">
+            No summary available for this publication.
+          </p>
+        )}
       </div>
 
       {displayLink && (
@@ -62,7 +70,7 @@ export const PublicationCard = ({ publication }: PublicationCardProps) => {
           onClick={() => window.open(displayLink, '_blank')}
         >
           <ExternalLink className="w-4 h-4 mr-2" />
-          View Publication
+          View Full Publication
         </NecronButton>
       )}
     </div>

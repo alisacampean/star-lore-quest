@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Publication } from "@/types/publication";
 import { PublicationCard } from "@/components/PublicationCard";
+import { PublicationFilters } from "@/components/PublicationFilters";
 import { SearchBar } from "@/components/SearchBar";
 import { NecronButton } from "@/components/NecronButton";
 import { Database, Download, Loader2, Home, Brain, Network } from "lucide-react";
@@ -15,10 +16,16 @@ const Explorer = () => {
   const initialQuery = searchParams.get("q") || "";
   
   const [searchQuery, setSearchQuery] = useState(initialQuery);
+  const [filters, setFilters] = useState({
+    yearRange: [null, null] as [number | null, number | null],
+    organisms: [] as string[],
+    researchArea: [] as string[],
+    experimentType: [] as string[],
+  });
 
   // Fetch publications from database
   const { data: publications = [], isLoading } = useQuery({
-    queryKey: ["publications", searchQuery],
+    queryKey: ["publications", searchQuery, filters],
     queryFn: async () => {
       let query = supabase.from("publications").select("*");
 
@@ -27,7 +34,30 @@ const Explorer = () => {
         query = query.ilike("title", `%${searchQuery}%`);
       }
 
-      const { data, error } = await query.order("created_at", { ascending: false }).limit(50);
+      // Apply year range filter
+      if (filters.yearRange[0]) {
+        query = query.gte("year", filters.yearRange[0]);
+      }
+      if (filters.yearRange[1]) {
+        query = query.lte("year", filters.yearRange[1]);
+      }
+
+      // Apply organism filter
+      if (filters.organisms.length > 0) {
+        query = query.in("organism", filters.organisms);
+      }
+
+      // Apply research area filter
+      if (filters.researchArea.length > 0) {
+        query = query.in("research_area", filters.researchArea);
+      }
+
+      // Apply experiment type filter
+      if (filters.experimentType.length > 0) {
+        query = query.in("experiment_type", filters.experimentType);
+      }
+
+      const { data, error } = await query.order("created_at", { ascending: false }).limit(100);
 
       if (error) {
         console.error("Error fetching publications:", error);
@@ -132,9 +162,14 @@ const Explorer = () => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
+        <div className="grid lg:grid-cols-4 gap-8">
+          {/* Filters Sidebar */}
+          <div className="lg:col-span-1">
+            <PublicationFilters filters={filters} onFiltersChange={setFilters} />
+          </div>
+
           {/* Publications Grid */}
-          <div>
+          <div className="lg:col-span-3">
             {isLoading ? (
               <div className="flex items-center justify-center h-64">
                 <div className="text-center space-y-4">
