@@ -23,6 +23,36 @@ const Explorer = () => {
     experimentType: [] as string[],
   });
 
+  // Handle search - clears filters
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (query.trim()) {
+      // Clear all filters when searching
+      setFilters({
+        yearRange: [null, null],
+        organisms: [],
+        researchArea: [],
+        experimentType: [],
+      });
+    }
+  };
+
+  // Handle filter change - clears search
+  const handleFiltersChange = (newFilters: typeof filters) => {
+    setFilters(newFilters);
+    // Check if any filter is active
+    const hasActiveFilters = 
+      newFilters.yearRange[0] !== null || 
+      newFilters.yearRange[1] !== null ||
+      newFilters.organisms.length > 0 ||
+      newFilters.researchArea.length > 0 ||
+      newFilters.experimentType.length > 0;
+    
+    if (hasActiveFilters) {
+      setSearchQuery("");
+    }
+  };
+
   // Fetch publications from database
   const { data: publications = [], isLoading } = useQuery({
     queryKey: ["publications", searchQuery, filters],
@@ -228,7 +258,7 @@ const Explorer = () => {
           </div>
 
           <SearchBar 
-            onSearch={setSearchQuery} 
+            onSearch={handleSearch} 
             initialValue={searchQuery}
             placeholder="Search by title, abstract, author..."
           />
@@ -240,7 +270,7 @@ const Explorer = () => {
         <div className="grid lg:grid-cols-4 gap-8">
           {/* Filters Sidebar */}
           <div className="lg:col-span-1">
-            <PublicationFilters filters={filters} onFiltersChange={setFilters} />
+            <PublicationFilters filters={filters} onFiltersChange={handleFiltersChange} />
           </div>
 
           {/* Publications Grid */}
@@ -257,6 +287,7 @@ const Explorer = () => {
                 <div className="mb-4 text-sm text-muted-foreground font-mono">
                   Showing {publications.length} results
                   {searchQuery && ` for "${searchQuery}"`}
+                  {!searchQuery && (filters.organisms.length > 0 || filters.researchArea.length > 0 || filters.experimentType.length > 0 || filters.yearRange[0] || filters.yearRange[1]) && " (filtered)"}
                 </div>
                 <div className="grid gap-6">
                   {publications.map((publication) => (
