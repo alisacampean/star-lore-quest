@@ -155,21 +155,20 @@ export const AIChat = ({ selectedQuestion, onQuestionHandled }: AIChatProps = {}
               <div
                 className={`max-w-[80%] p-3 rounded ${
                   message.role === "user"
-                    ? "bg-primary/20 text-foreground"
+                    ? "bg-primary/20 text-primary"
                     : "bg-card border border-primary/30"
                 }`}
               >
                 {message.role === "assistant" ? (
                   <div className="text-sm leading-relaxed prose prose-invert prose-sm max-w-none 
                     prose-headings:text-accent prose-headings:font-bold prose-headings:mb-3 prose-headings:mt-4
-                    prose-p:my-3 prose-p:leading-7 prose-p:text-white
-                    prose-a:bg-primary prose-a:text-background prose-a:font-bold prose-a:px-2 prose-a:py-0.5 prose-a:rounded prose-a:no-underline hover:prose-a:bg-primary/80
-                    prose-strong:text-primary prose-strong:font-bold
-                    prose-em:text-white
+                    prose-p:my-3 prose-p:leading-7
+                    prose-a:text-primary prose-a:underline prose-a:decoration-primary/50 hover:prose-a:decoration-primary
+                    prose-strong:text-primary prose-strong:font-bold text-primary
+                    prose-em:text-primary/90
                     prose-code:text-primary prose-code:bg-primary/10 prose-code:px-1 prose-code:rounded
-                    prose-ul:my-3 prose-ul:space-y-2 prose-li:my-1 prose-li:text-white
+                    prose-ul:my-3 prose-ul:space-y-2 prose-li:my-1
                     prose-ol:my-3 prose-ol:space-y-2
-                    text-white
                     [&_mark]:bg-primary/30 [&_mark]:text-primary [&_mark]:px-1 [&_mark]:rounded [&_mark]:font-semibold">
                     <ReactMarkdown
                       components={{
