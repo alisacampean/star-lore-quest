@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Publication } from "@/types/publication";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 const Knowledge = () => {
   const navigate = useNavigate();
@@ -71,6 +72,24 @@ const Knowledge = () => {
     setSelectedPublications(selectedPublications.filter(pubId => pubId !== id));
   };
 
+  const loadAllPublications = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("publications")
+        .select("id")
+        .limit(100); // Limit to prevent overload
+
+      if (error) throw error;
+      if (data) {
+        setSelectedPublications(data.map(pub => pub.id));
+        toast.success(`Added ${data.length} publications to graph`);
+      }
+    } catch (error) {
+      console.error("Failed to load all publications:", error);
+      toast.error("Failed to load publications");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -112,9 +131,18 @@ const Knowledge = () => {
           {/* Left Panel - Search & Add */}
           <div className="space-y-4">
             <div className="circuit-frame bg-card p-4">
-              <h3 className="text-lg font-bold font-mono text-accent mb-4">
-                ADD PUBLICATIONS
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold font-mono text-accent">
+                  ADD PUBLICATIONS
+                </h3>
+                <NecronButton 
+                  onClick={loadAllPublications} 
+                  size="sm" 
+                  variant="secondary"
+                >
+                  Add All
+                </NecronButton>
+              </div>
               <SearchBar 
                 onSearch={setSearchQuery} 
                 placeholder="Search to add..."
