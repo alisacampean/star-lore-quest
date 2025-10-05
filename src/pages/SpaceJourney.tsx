@@ -4,9 +4,12 @@ import { Brain, Dna, Beaker, Microscope, Orbit, Radiation, Satellite, Sprout, Ro
 import earthImg from "@/assets/earth.png";
 import nebula1Img from "@/assets/nebula1.png";
 import nebula2Img from "@/assets/nebula2.png";
-import asteroid1Img from "@/assets/asteroid1-transparent.png";
-import asteroid2Img from "@/assets/asteroid2-transparent.png";
+import asteroid1Img from "@/assets/asteroid1.png";
+import asteroid2Img from "@/assets/asteroid2.png";
+import asteroid3Img from "@/assets/asteroid3.png";
+import asteroid4Img from "@/assets/asteroid4.png";
 import rocketImg from "@/assets/rocket.png";
+import satelliteImg from "@/assets/satellite.png";
 
 interface Topic {
   id: string;
@@ -194,30 +197,54 @@ export default function SpaceJourney() {
         />
       </div>
 
-      {/* Nebulas - Animated */}
+      {/* Nebulas - Animated with better blending */}
       <div 
-        className="fixed opacity-20 pointer-events-none z-10"
+        className="fixed opacity-10 pointer-events-none z-10"
         style={{
           left: '30%',
           top: '20%',
           width: '800px',
           height: '800px',
-          animation: 'float 20s ease-in-out infinite'
+          animation: 'float 20s ease-in-out infinite',
+          mixBlendMode: 'screen'
         }}
       >
         <img src={nebula1Img} alt="" className="w-full h-full object-contain" />
       </div>
       <div 
-        className="fixed opacity-15 pointer-events-none z-10"
+        className="fixed opacity-8 pointer-events-none z-10"
         style={{
           left: '60%',
           top: '50%',
           width: '700px',
           height: '700px',
-          animation: 'float 25s ease-in-out infinite reverse'
+          animation: 'float 25s ease-in-out infinite reverse',
+          mixBlendMode: 'screen'
         }}
       >
         <img src={nebula2Img} alt="" className="w-full h-full object-contain" />
+      </div>
+
+      {/* Satellite next to Earth - fades with Earth */}
+      <div 
+        className="fixed left-0 top-1/2 -translate-y-1/2 z-20 transition-opacity duration-700"
+        style={{
+          width: '15vh',
+          height: '15vh',
+          marginLeft: '35vh',
+          marginTop: '-25vh',
+          opacity: Math.max(0, 1 - scrollProgress / 20)
+        }}
+      >
+        <img 
+          src={satelliteImg} 
+          alt="Satellite" 
+          className="w-full h-full object-contain"
+          style={{
+            filter: 'drop-shadow(0 0 20px rgba(59, 130, 246, 0.5))',
+            animation: 'float 10s ease-in-out infinite'
+          }}
+        />
       </div>
 
       {/* Scrollable container - needed for absolute positioned asteroids */}
@@ -237,15 +264,63 @@ export default function SpaceJourney() {
         
         {/* Wide content area */}
         <div className="relative h-full" style={{ width: '800vw' }}>
-          {/* Asteroids - Stay at fixed positions in scroll space */}
+          {/* Asteroids - Scattered throughout space, left behind as you scroll */}
           <div 
             className="absolute pointer-events-none z-15"
             style={{
-              left: '15%',
+              left: '8%',
               top: '70%',
-              width: '80px',
-              height: '80px',
+              width: '100px',
+              height: '100px',
               animation: 'rotate 30s linear infinite, float 15s ease-in-out infinite'
+            }}
+          >
+            <img src={asteroid1Img} alt="" className="w-full h-full object-contain opacity-70" />
+          </div>
+          <div 
+            className="absolute pointer-events-none z-15"
+            style={{
+              left: '12%',
+              top: '15%',
+              width: '70px',
+              height: '70px',
+              animation: 'rotate 40s linear infinite reverse, float 20s ease-in-out infinite'
+            }}
+          >
+            <img src={asteroid2Img} alt="" className="w-full h-full object-contain opacity-60" />
+          </div>
+          <div 
+            className="absolute pointer-events-none z-15"
+            style={{
+              left: '18%',
+              top: '55%',
+              width: '85px',
+              height: '85px',
+              animation: 'rotate 35s linear infinite, float 18s ease-in-out infinite'
+            }}
+          >
+            <img src={asteroid3Img} alt="" className="w-full h-full object-contain opacity-65" />
+          </div>
+          <div 
+            className="absolute pointer-events-none z-15"
+            style={{
+              left: '25%',
+              top: '25%',
+              width: '60px',
+              height: '60px',
+              animation: 'rotate 28s linear infinite, float 16s ease-in-out infinite'
+            }}
+          >
+            <img src={asteroid4Img} alt="" className="w-full h-full object-contain opacity-55" />
+          </div>
+          <div 
+            className="absolute pointer-events-none z-15"
+            style={{
+              left: '32%',
+              top: '80%',
+              width: '90px',
+              height: '90px',
+              animation: 'rotate 33s linear infinite reverse, float 17s ease-in-out infinite'
             }}
           >
             <img src={asteroid1Img} alt="" className="w-full h-full object-contain opacity-60" />
@@ -253,23 +328,47 @@ export default function SpaceJourney() {
           <div 
             className="absolute pointer-events-none z-15"
             style={{
-              left: '30%',
-              top: '15%',
-              width: '60px',
-              height: '60px',
-              animation: 'rotate 40s linear infinite reverse, float 20s ease-in-out infinite'
+              left: '40%',
+              top: '20%',
+              width: '75px',
+              height: '75px',
+              animation: 'rotate 38s linear infinite, float 19s ease-in-out infinite'
             }}
           >
-            <img src={asteroid2Img} alt="" className="w-full h-full object-contain opacity-50" />
+            <img src={asteroid3Img} alt="" className="w-full h-full object-contain opacity-70" />
+          </div>
+          <div 
+            className="absolute pointer-events-none z-15"
+            style={{
+              left: '48%',
+              top: '65%',
+              width: '95px',
+              height: '95px',
+              animation: 'rotate 31s linear infinite reverse, float 14s ease-in-out infinite'
+            }}
+          >
+            <img src={asteroid2Img} alt="" className="w-full h-full object-contain opacity-65" />
           </div>
           <div 
             className="absolute pointer-events-none z-15"
             style={{
               left: '55%',
-              top: '60%',
+              top: '35%',
+              width: '80px',
+              height: '80px',
+              animation: 'rotate 36s linear infinite, float 21s ease-in-out infinite'
+            }}
+          >
+            <img src={asteroid4Img} alt="" className="w-full h-full object-contain opacity-60" />
+          </div>
+          <div 
+            className="absolute pointer-events-none z-15"
+            style={{
+              left: '63%',
+              top: '75%',
               width: '70px',
               height: '70px',
-              animation: 'rotate 35s linear infinite, float 18s ease-in-out infinite'
+              animation: 'rotate 29s linear infinite reverse, float 16s ease-in-out infinite'
             }}
           >
             <img src={asteroid1Img} alt="" className="w-full h-full object-contain opacity-55" />
@@ -277,14 +376,50 @@ export default function SpaceJourney() {
           <div 
             className="absolute pointer-events-none z-15"
             style={{
-              left: '75%',
-              top: '25%',
-              width: '65px',
-              height: '65px',
-              animation: 'rotate 28s linear infinite, float 16s ease-in-out infinite'
+              left: '70%',
+              top: '18%',
+              width: '88px',
+              height: '88px',
+              animation: 'rotate 34s linear infinite, float 18s ease-in-out infinite'
             }}
           >
-            <img src={asteroid2Img} alt="" className="w-full h-full object-contain opacity-45" />
+            <img src={asteroid3Img} alt="" className="w-full h-full object-contain opacity-68" />
+          </div>
+          <div 
+            className="absolute pointer-events-none z-15"
+            style={{
+              left: '77%',
+              top: '60%',
+              width: '92px',
+              height: '92px',
+              animation: 'rotate 37s linear infinite reverse, float 15s ease-in-out infinite'
+            }}
+          >
+            <img src={asteroid2Img} alt="" className="w-full h-full object-contain opacity-62" />
+          </div>
+          <div 
+            className="absolute pointer-events-none z-15"
+            style={{
+              left: '84%',
+              top: '30%',
+              width: '78px',
+              height: '78px',
+              animation: 'rotate 32s linear infinite, float 20s ease-in-out infinite'
+            }}
+          >
+            <img src={asteroid4Img} alt="" className="w-full h-full object-contain opacity-58" />
+          </div>
+          <div 
+            className="absolute pointer-events-none z-15"
+            style={{
+              left: '90%',
+              top: '70%',
+              width: '85px',
+              height: '85px',
+              animation: 'rotate 30s linear infinite reverse, float 17s ease-in-out infinite'
+            }}
+          >
+            <img src={asteroid1Img} alt="" className="w-full h-full object-contain opacity-64" />
           </div>
 
       {/* Back button */}
