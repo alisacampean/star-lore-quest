@@ -97,14 +97,19 @@ const Explorer = () => {
 
   const handleImport = async () => {
     try {
-      toast.loading("Importing publications from CSV...");
+      const toastId = toast.loading("Starting import with AI summary generation... This will take 10-15 minutes for all publications.", {
+        duration: Infinity,
+      });
+      
       const response = await supabase.functions.invoke("import-publications");
+      
+      toast.dismiss(toastId);
       
       if (response.error) {
         toast.error(`Import failed: ${response.error.message}`);
       } else {
-        toast.success(response.data.message || "Publications imported successfully!");
-        window.location.reload(); // Refresh to show new data
+        toast.success(response.data.message || "Publications imported successfully with AI summaries!");
+        setTimeout(() => window.location.reload(), 2000); // Refresh to show new data
       }
     } catch (error) {
       toast.error("Failed to import publications");
