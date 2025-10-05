@@ -27,12 +27,12 @@ serve(async (req) => {
     // Search publications database for relevant content
     const { data: publications, error } = await supabase
       .from("publications")
-      .select("title, link, abstract, research_area")
+      .select("title, link")
       .textSearch("title", userMessage.split(" ").slice(0, 5).join(" "), {
         type: "websearch",
         config: "english",
       })
-      .limit(8);
+      .limit(5);
 
     if (error) {
       console.error("Database search error:", error);
@@ -41,11 +41,10 @@ serve(async (req) => {
     // Build context from publications
     let publicationsContext = "";
     if (publications && publications.length > 0) {
-      publicationsContext = "\n\n📚 **Relevant NASA Space Biology Publications (ALWAYS reference these with markdown links when relevant):**\n\n";
+      publicationsContext = "\n\nRelevant NASA space biology publications:\n";
       publications.forEach((pub, idx) => {
-        publicationsContext += `${idx + 1}. **"${pub.title}"**\n   Link: ${pub.link}\n   Area: ${pub.research_area || 'N/A'}\n   ${pub.abstract ? `Summary: ${pub.abstract.substring(0, 150)}...\n` : ''}\n`;
+        publicationsContext += `${idx + 1}. "${pub.title}" - ${pub.link}\n`;
       });
-      publicationsContext += "\n**IMPORTANT: When mentioning any of these studies in your response, ALWAYS format them as: [Study Title](link)**\n";
     }
 
     // Call Lovable AI with streaming
@@ -62,44 +61,22 @@ serve(async (req) => {
             role: "system",
             content: `You are a knowledgeable AI assistant specializing in NASA space biology research. 
 
-**CRITICAL FORMATTING RULES:**
+Your role:
+- Answer questions about space biology, microgravity effects, radiation studies, and related topics
+- When relevant publications are provided, ALWAYS reference them with their links as markdown: [Study Title](link)
+- Format your responses with clear structure using bullet points, numbered lists, and headings
+- Use ==highlighted text== for KEY findings and important concepts (this will be styled in green)
+- Use **bold** for emphasis and *italics* for scientific terms
+- Add relevant emojis to make the content engaging (🧬 🚀 🔬 🌌 ⚛️ 🛰️ 🌍 etc.)
+- Structure responses with:
+  • Clear introductory statement with emoji
+  • Bullet points for key findings or effects
+  • Numbered lists for sequential information
+  • Relevant study references with links
+- Keep responses informative but scannable (use white space)
+- Always link to specific studies when mentioning research
 
-1. **Study References (MANDATORY):**
-   - ALWAYS cite studies using markdown links: [Study Title](actual_link)
-   - When discussing research, ALWAYS include at least 2-3 study links from the provided publications
-   - Example: "According to [Effects of Microgravity on Cell Growth](https://link.com), we observe..."
-
-2. **Highlighting Key Concepts:**
-   - Use ==highlighted text== for KEY findings, important terms, and critical concepts
-   - Highlight at least 3-5 important terms/findings per response
-   - Examples: ==microgravity==, ==radiation exposure==, ==bone density loss==
-
-3. **Structure & Readability:**
-   - Start with an engaging intro with emoji (🧬 🚀 🔬 🌌 ⚛️ 🛰️ 🌍)
-   - Use bullet points (•) for listing effects/findings
-   - Use numbered lists (1. 2. 3.) for sequential steps
-   - Add blank lines between sections for breathing room
-   - Keep paragraphs short (2-3 sentences max)
-
-4. **Visual Enhancement:**
-   - Use emojis throughout (but not excessively)
-   - Use **bold** for emphasis
-   - Use *italics* for scientific terms
-
-**Example Response Structure:**
-🔬 **Research Overview**
-
-Key findings show that ==microgravity== significantly impacts cellular behavior:
-
-• Effect 1 with ==highlighted term==
-• Effect 2 with ==another key term==
-• Effect 3
-
-📚 **Relevant Studies:**
-- [Study Title 1](link) found that...
-- [Study Title 2](link) demonstrated...
-
-**Remember:** ALWAYS include clickable study links and use == for highlighting!${publicationsContext}`,
+Style: Engaging, visual, and easy to scan while maintaining scientific accuracy.${publicationsContext}`,
           },
           ...messages,
         ],

@@ -161,41 +161,34 @@ export const AIChat = ({ selectedQuestion, onQuestionHandled }: AIChatProps = {}
               >
                 {message.role === "assistant" ? (
                   <div className="text-sm leading-relaxed prose prose-invert prose-sm max-w-none 
-                    prose-headings:text-foreground prose-headings:font-bold prose-headings:mb-3 prose-headings:mt-5 prose-headings:text-base
-                    prose-p:my-3 prose-p:leading-7 prose-p:text-foreground/90
-                    prose-a:text-primary prose-a:no-underline prose-a:font-medium prose-a:underline hover:prose-a:text-primary/80
-                    prose-strong:text-primary prose-strong:font-bold
-                    prose-em:text-foreground/80 prose-em:not-italic
-                    prose-code:text-primary prose-code:bg-primary/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs
-                    prose-ul:my-3 prose-ul:space-y-2 prose-ul:ml-0 prose-ul:list-none
-                    prose-ol:my-3 prose-ol:space-y-2 prose-ol:ml-6
-                    prose-li:my-1.5 prose-li:leading-7 prose-li:pl-0
-                    [&_mark]:bg-primary [&_mark]:text-background [&_mark]:px-1.5 [&_mark]:py-0.5 [&_mark]:rounded [&_mark]:font-bold [&_mark]:not-italic">
+                    prose-headings:text-accent prose-headings:font-bold prose-headings:mb-3 prose-headings:mt-4
+                    prose-p:my-3 prose-p:leading-7
+                    prose-a:text-primary prose-a:underline prose-a:decoration-primary/50 hover:prose-a:decoration-primary
+                    prose-strong:text-accent prose-strong:font-bold
+                    prose-em:text-primary/90
+                    prose-code:text-primary prose-code:bg-primary/10 prose-code:px-1 prose-code:rounded
+                    prose-ul:my-3 prose-ul:space-y-2 prose-li:my-1
+                    prose-ol:my-3 prose-ol:space-y-2
+                    [&_mark]:bg-primary/30 [&_mark]:text-primary [&_mark]:px-1 [&_mark]:rounded [&_mark]:font-semibold">
                     <ReactMarkdown
                       components={{
-                        // Convert ==highlight== to <mark> tags with proper handling
-                        p: ({ children, ...props }) => {
-                          const processChildren = (child: any): any => {
-                            if (typeof child === 'string') {
-                              const parts = child.split(/(==.+?==)/g);
-                              return parts.map((part, i) => {
-                                if (part.startsWith('==') && part.endsWith('==')) {
-                                  return <mark key={i}>{part.slice(2, -2)}</mark>;
-                                }
-                                return part;
-                              });
-                            }
-                            if (Array.isArray(child)) {
-                              return child.map(processChildren);
-                            }
-                            return child;
-                          };
-
-                          return <p {...props}>{processChildren(children)}</p>;
-                        },
-                        // Ensure lists have proper spacing
-                        ul: ({ children, ...props }) => <ul className="space-y-2" {...props}>{children}</ul>,
-                        ol: ({ children, ...props }) => <ol className="space-y-2" {...props}>{children}</ol>,
+                        // Convert ==highlight== to <mark> tags
+                        p: ({ children }) => {
+                          if (typeof children === 'string') {
+                            const parts = children.split(/(==.*?==)/g);
+                            return (
+                              <p>
+                                {parts.map((part, i) => {
+                                  if (part.startsWith('==') && part.endsWith('==')) {
+                                    return <mark key={i}>{part.slice(2, -2)}</mark>;
+                                  }
+                                  return part;
+                                })}
+                              </p>
+                            );
+                          }
+                          return <p>{children}</p>;
+                        }
                       }}
                     >
                       {message.content}
