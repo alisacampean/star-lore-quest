@@ -161,16 +161,16 @@ export const AIChat = ({ selectedQuestion, onQuestionHandled }: AIChatProps = {}
               >
                 {message.role === "assistant" ? (
                   <div className="text-sm leading-relaxed prose prose-invert prose-sm max-w-none 
-                    prose-headings:text-primary prose-headings:font-bold prose-headings:mb-4 prose-headings:mt-6 prose-headings:text-base
-                    prose-p:my-4 prose-p:leading-8
-                    prose-a:text-primary prose-a:no-underline prose-a:font-medium prose-a:bg-primary/10 prose-a:px-1.5 prose-a:py-0.5 prose-a:rounded hover:prose-a:bg-primary/20 hover:prose-a:underline
-                    prose-strong:text-accent prose-strong:font-bold
-                    prose-em:text-primary/80 prose-em:not-italic
+                    prose-headings:text-foreground prose-headings:font-bold prose-headings:mb-3 prose-headings:mt-5 prose-headings:text-base
+                    prose-p:my-3 prose-p:leading-7 prose-p:text-foreground/90
+                    prose-a:text-primary prose-a:no-underline prose-a:font-medium prose-a:underline hover:prose-a:text-primary/80
+                    prose-strong:text-primary prose-strong:font-bold
+                    prose-em:text-foreground/80 prose-em:not-italic
                     prose-code:text-primary prose-code:bg-primary/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs
-                    prose-ul:my-4 prose-ul:space-y-2.5 prose-ul:ml-4
-                    prose-ol:my-4 prose-ol:space-y-2.5 prose-ol:ml-4
-                    prose-li:my-2 prose-li:leading-7
-                    [&_mark]:bg-primary [&_mark]:text-primary-foreground [&_mark]:px-2 [&_mark]:py-0.5 [&_mark]:rounded [&_mark]:font-semibold [&_mark]:shadow-sm">
+                    prose-ul:my-3 prose-ul:space-y-2 prose-ul:ml-0 prose-ul:list-none
+                    prose-ol:my-3 prose-ol:space-y-2 prose-ol:ml-6
+                    prose-li:my-1.5 prose-li:leading-7 prose-li:pl-0
+                    [&_mark]:bg-primary [&_mark]:text-background [&_mark]:px-1.5 [&_mark]:py-0.5 [&_mark]:rounded [&_mark]:font-bold [&_mark]:not-italic">
                     <ReactMarkdown
                       components={{
                         // Convert ==highlight== to <mark> tags with proper handling
