@@ -155,7 +155,7 @@ export const AIChat = ({ selectedQuestion, onQuestionHandled }: AIChatProps = {}
               <div
                 className={`max-w-[80%] p-3 rounded ${
                   message.role === "user"
-                    ? "bg-primary/20 text-primary"
+                    ? "bg-primary/20 text-foreground"
                     : "bg-card border border-primary/30"
                 }`}
               >
