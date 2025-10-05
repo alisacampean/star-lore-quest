@@ -301,21 +301,22 @@ export default function SpaceJourney() {
         className="fixed z-40 left-32 top-1/2 -translate-y-1/2"
       >
         <div className="relative">
-          <img 
-            src={rocketImg}
-            alt="Rocket"
-            className="w-48 h-48 object-contain"
-            style={{
-              filter: 'drop-shadow(0 0 30px rgba(59, 130, 246, 0.6)) drop-shadow(0 0 15px rgba(236, 72, 153, 0.4))'
-            }}
-          />
-          {/* Engine trail that grows with scroll */}
+          {/* Engine trail that grows with scroll - positioned behind */}
           <div 
-            className="absolute left-8 top-1/2 -translate-y-1/2 h-6 bg-gradient-to-l from-orange-500 via-yellow-400 to-transparent"
+            className="absolute right-full top-1/2 -translate-y-1/2 h-8 bg-gradient-to-r from-orange-500 via-yellow-400 to-transparent"
             style={{
               width: `${scrollProgress * 4}px`,
               opacity: scrollProgress > 0 ? 0.8 : 0,
-              filter: 'blur(4px)'
+              filter: 'blur(5px)',
+              marginRight: '-10px'
+            }}
+          />
+          <img 
+            src={rocketImg}
+            alt="Rocket"
+            className="w-48 h-48 object-contain relative z-10"
+            style={{
+              filter: 'drop-shadow(0 0 30px rgba(59, 130, 246, 0.6)) drop-shadow(0 0 15px rgba(236, 72, 153, 0.4))'
             }}
           />
         </div>
