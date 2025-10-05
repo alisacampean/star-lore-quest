@@ -184,7 +184,7 @@ export default function SpaceJourney() {
           width: '60vh',
           height: '60vh',
           marginLeft: '-30vh',
-          opacity: Math.max(0, 1 - scrollProgress / 20)
+          opacity: Math.max(0, 1 - scrollProgress / 10)
         }}
       >
         <img 
@@ -199,27 +199,31 @@ export default function SpaceJourney() {
 
       {/* Nebulas - Animated with better blending */}
       <div 
-        className="fixed opacity-10 pointer-events-none z-10"
+        className="fixed pointer-events-none z-10"
         style={{
           left: '30%',
           top: '20%',
           width: '800px',
           height: '800px',
           animation: 'float 20s ease-in-out infinite',
-          mixBlendMode: 'screen'
+          mixBlendMode: 'screen',
+          opacity: 0.15,
+          filter: 'blur(8px)'
         }}
       >
         <img src={nebula1Img} alt="" className="w-full h-full object-contain" />
       </div>
       <div 
-        className="fixed opacity-8 pointer-events-none z-10"
+        className="fixed pointer-events-none z-10"
         style={{
           left: '60%',
           top: '50%',
           width: '700px',
           height: '700px',
           animation: 'float 25s ease-in-out infinite reverse',
-          mixBlendMode: 'screen'
+          mixBlendMode: 'screen',
+          opacity: 0.12,
+          filter: 'blur(10px)'
         }}
       >
         <img src={nebula2Img} alt="" className="w-full h-full object-contain" />
@@ -233,7 +237,7 @@ export default function SpaceJourney() {
           height: '15vh',
           marginLeft: '35vh',
           marginTop: '-25vh',
-          opacity: Math.max(0, 1 - scrollProgress / 20)
+          opacity: Math.max(0, 1 - scrollProgress / 10)
         }}
       >
         <img 
