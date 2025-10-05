@@ -28,4 +28,5 @@ export interface GraphLink {
   target: string;
   type?: string;
   strength: number;
+  topics?: string[];
 }

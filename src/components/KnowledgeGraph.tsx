@@ -51,8 +51,41 @@ export const KnowledgeGraph = ({ selectedPublicationIds }: KnowledgeGraphProps) 
         link: pub.link,
       }));
 
-      // Create connections based on shared attributes
-      const links: GraphLink[] = [];
+      // Get AI-powered semantic connections
+      let aiConnections: GraphLink[] = [];
+      try {
+        const { data: connectionData, error: connError } = await supabase.functions.invoke(
+          'analyze-connections',
+          {
+            body: { 
+              publications: pubs.map(p => ({
+                id: p.id,
+                title: p.title,
+                abstract: p.abstract,
+                research_area: p.research_area
+              }))
+            }
+          }
+        );
+
+        if (connError) {
+          console.error("Connection analysis error:", connError);
+          toast.error("Could not analyze connections");
+        } else if (connectionData?.connections) {
+          aiConnections = connectionData.connections.map((conn: any) => ({
+            source: conn.source,
+            target: conn.target,
+            type: conn.type || "semantic",
+            strength: conn.strength,
+            topics: conn.topics
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to analyze connections:", err);
+      }
+
+      // Also create basic connections based on shared attributes
+      const basicLinks: GraphLink[] = [];
       for (let i = 0; i < pubs.length; i++) {
         for (let j = i + 1; j < pubs.length; j++) {
           const pub1 = pubs[i];
@@ -62,45 +95,47 @@ export const KnowledgeGraph = ({ selectedPublicationIds }: KnowledgeGraphProps) 
           // Connect if same research area
           if (pub1.research_area && pub2.research_area && 
               pub1.research_area === pub2.research_area) {
-            strength += 2;
+            strength += 1.5;
           }
 
           // Connect if same organism
           if (pub1.organism && pub2.organism && 
               pub1.organism === pub2.organism) {
-            strength += 1.5;
+            strength += 1;
           }
 
           // Connect if same experiment type
           if (pub1.experiment_type && pub2.experiment_type && 
               pub1.experiment_type === pub2.experiment_type) {
-            strength += 1;
-          }
-
-          // Connect if shared author (simple check)
-          if (pub1.authors && pub2.authors) {
-            const authors1 = pub1.authors.split(',').map(a => a.trim().toLowerCase());
-            const authors2 = pub2.authors.split(',').map(a => a.trim().toLowerCase());
-            const sharedAuthors = authors1.filter(a => authors2.includes(a));
-            if (sharedAuthors.length > 0) {
-              strength += sharedAuthors.length;
-            }
+            strength += 0.5;
           }
 
           if (strength > 0) {
-            links.push({
+            basicLinks.push({
               source: pub1.id,
               target: pub2.id,
-              type: "related",
+              type: "attribute",
               strength: strength,
             });
           }
         }
       }
 
-      setGraphData({ nodes, links });
+      // Merge AI connections with basic connections, prioritizing AI
+      const allLinks = [...aiConnections];
+      for (const basicLink of basicLinks) {
+        const exists = aiConnections.some(
+          link => (link.source === basicLink.source && link.target === basicLink.target) ||
+                  (link.source === basicLink.target && link.target === basicLink.source)
+        );
+        if (!exists) {
+          allLinks.push(basicLink);
+        }
+      }
+
+      setGraphData({ nodes, links: allLinks });
       if (pubs.length > 0) {
-        toast.success(`Graph updated: ${nodes.length} publications, ${links.length} connections`);
+        toast.success(`Graph updated: ${nodes.length} publications, ${allLinks.length} connections`);
       }
     } catch (error) {
       console.error("Failed to load graph data:", error);
@@ -156,13 +191,32 @@ export const KnowledgeGraph = ({ selectedPublicationIds }: KnowledgeGraphProps) 
         nodeColor={() => "hsl(var(--primary))"}
         nodeRelSize={6}
         linkColor={(link: any) => {
-          const strength = link.strength || 1;
-          const opacity = Math.min(strength / 5, 1);
-          return `hsla(var(--accent), ${opacity})`;
+          // Semantic connections are cyan/accent, attribute connections are more muted
+          if (link.type === "semantic") {
+            const strength = link.strength || 1;
+            const opacity = Math.min(strength / 5, 0.9);
+            return `hsla(180, 100%, 50%, ${opacity})`;
+          }
+          return `hsla(var(--primary), 0.3)`;
         }}
-        linkWidth={(link: any) => Math.min((link.strength || 1) * 1.5, 6)}
-        linkDirectionalParticles={(link: any) => Math.ceil((link.strength || 1) / 2)}
-        linkDirectionalParticleSpeed={0.003}
+        linkWidth={(link: any) => {
+          const baseWidth = link.type === "semantic" ? 2 : 1;
+          return Math.min((link.strength || 1) * baseWidth, 8);
+        }}
+        linkDirectionalParticles={(link: any) => {
+          // More particles for stronger semantic connections
+          if (link.type === "semantic") {
+            return Math.ceil((link.strength || 1));
+          }
+          return 0;
+        }}
+        linkDirectionalParticleSpeed={0.004}
+        linkLabel={(link: any) => {
+          if (link.topics && link.topics.length > 0) {
+            return `Topics: ${link.topics.join(', ')}`;
+          }
+          return link.type === "semantic" ? "Semantically related" : "Shared attributes";
+        }}
         backgroundColor="hsl(var(--card))"
         onNodeClick={(node: any) => {
           if (node.link) {
