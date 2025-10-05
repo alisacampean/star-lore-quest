@@ -1,6 +1,8 @@
 export interface Publication {
   id: string;
   title: string;
+  link: string;
+  created_at?: string;
   abstract?: string;
   year?: number;
   authors?: string;
@@ -8,7 +10,6 @@ export interface Publication {
   organism?: string;
   experiment_type?: string;
   publication_url?: string;
-  created_at?: string;
 }
 
 export interface GraphNode {

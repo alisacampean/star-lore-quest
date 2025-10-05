@@ -157,10 +157,25 @@ export default function SpaceJourney() {
     setLoadingPublications(true);
     
     try {
+      // Define keywords for each topic
+      const topicKeywords: Record<string, string[]> = {
+        "microgravity": ["microgravity", "weightlessness", "unloading", "reduced gravity"],
+        "radiation": ["radiation", "cosmic", "HZE", "ionizing"],
+        "plant-biology": ["plant", "Arabidopsis", "root", "gravitropism", "photosynthesis"],
+        "cellular": ["cellular", "cell", "gene expression", "molecular"],
+        "genetics": ["genetic", "DNA", "gene", "chromosome", "epigenetic"],
+        "neuroscience": ["neuroscience", "brain", "neuronal", "cognitive"],
+        "biotechnology": ["biotechnology", "biotech", "pharmaceutical"],
+        "satellite": ["satellite", "orbital", "ISS", "space station"]
+      };
+
+      const keywords = topicKeywords[topic.id] || [topic.title.toLowerCase()];
+      
+      // Build OR query for multiple keywords
       const { data, error } = await supabase
         .from('publications')
         .select('*')
-        .ilike('title', `%${topic.title}%`)
+        .or(keywords.map(kw => `title.ilike.%${kw}%`).join(','))
         .limit(3);
       
       if (error) throw error;
@@ -634,24 +649,15 @@ export default function SpaceJourney() {
                   {topPublications.map((pub) => (
                     <div key={pub.id} className="circuit-frame bg-background/50 p-4 space-y-3">
                       <h3 className="font-bold text-primary line-clamp-2">{pub.title}</h3>
-                      {pub.abstract && (
-                        <p className="text-sm text-foreground/80 line-clamp-3">{pub.abstract}</p>
-                      )}
-                      <div className="flex items-center justify-between">
-                        <div className="flex gap-2 text-xs text-muted-foreground">
-                          {pub.year && <span>{pub.year}</span>}
-                          {pub.authors && <span>• {pub.authors.split(',')[0]}</span>}
-                        </div>
-                        {pub.publication_url && (
-                          <a
-                            href={pub.publication_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-sm text-primary hover:text-accent transition-colors"
-                          >
-                            View <ExternalLink className="w-3 h-3" />
-                          </a>
-                        )}
+                      <div className="flex items-center justify-end">
+                        <a
+                          href={pub.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-sm text-primary hover:text-accent transition-colors"
+                        >
+                          View Study <ExternalLink className="w-3 h-3" />
+                        </a>
                       </div>
                     </div>
                   ))}

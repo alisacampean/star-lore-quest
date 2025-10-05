@@ -34,6 +34,7 @@ const Explorer = () => {
     organism: ["Humans", "Mice", "Plants", "C. elegans", "Drosophila"][i % 5],
     experiment_type: ["ISS Mission", "Space Shuttle", "Ground Analog", "Parabolic Flight", "Laboratory Study"][i % 5],
     publication_url: `https://ntrs.nasa.gov/citations/${20240000 + i}`,
+    link: `https://ntrs.nasa.gov/citations/${20240000 + i}`,
   }));
 
   // Fetch publications count
@@ -108,6 +109,23 @@ const Explorer = () => {
     toast.success("Export functionality coming soon!");
   };
 
+  const handleImport = async () => {
+    try {
+      toast.loading("Importing publications from CSV...");
+      const response = await supabase.functions.invoke("import-publications");
+      
+      if (response.error) {
+        toast.error(`Import failed: ${response.error.message}`);
+      } else {
+        toast.success(response.data.message || "Publications imported successfully!");
+        window.location.reload(); // Refresh to show new data
+      }
+    } catch (error) {
+      toast.error("Failed to import publications");
+      console.error(error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -141,6 +159,10 @@ const Explorer = () => {
             <NecronButton onClick={handleExport} size="sm" variant="secondary">
               <Download className="w-4 h-4 mr-2" />
               Export Results
+            </NecronButton>
+            <NecronButton onClick={handleImport} size="sm" variant="primary">
+              <Database className="w-4 h-4 mr-2" />
+              Import CSV Data
             </NecronButton>
           </div>
 
