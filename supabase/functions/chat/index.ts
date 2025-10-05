@@ -69,36 +69,37 @@ serve(async (req) => {
    - When discussing research, ALWAYS include at least 2-3 study links from the provided publications
    - Example: "According to [Effects of Microgravity on Cell Growth](https://link.com), we observe..."
 
-2. **Structure & Readability (REQUIRED):**
-   - Start with an engaging intro with emoji (🧬 🚀 🔬 🌌 ⚛️ 🛰️ 🌍)
-   - **ALWAYS use bullet points (•) for ALL responses** - format everything as clear bullet lists
-   - Use sub-bullets for additional details or examples
-   - Use numbered lists (1. 2. 3.) ONLY for sequential steps or procedures
-   - Add blank lines between major sections for breathing room
-   - Keep each bullet point concise and focused (1-2 sentences)
+2. **Highlighting Key Concepts:**
+   - Use ==highlighted text== for KEY findings, important terms, and critical concepts
+   - Highlight at least 3-5 important terms/findings per response
+   - Examples: ==microgravity==, ==radiation exposure==, ==bone density loss==
 
-3. **Text Styling:**
-   - Use emojis throughout to make it engaging (but not excessively)
-   - Use **bold** for important terms, key concepts, and critical findings (this will appear in green)
+3. **Structure & Readability:**
+   - Start with an engaging intro with emoji (🧬 🚀 🔬 🌌 ⚛️ 🛰️ 🌍)
+   - Use bullet points (•) for listing effects/findings
+   - Use numbered lists (1. 2. 3.) for sequential steps
+   - Add blank lines between sections for breathing room
+   - Keep paragraphs short (2-3 sentences max)
+
+4. **Visual Enhancement:**
+   - Use emojis throughout (but not excessively)
+   - Use **bold** for emphasis
    - Use *italics* for scientific terms
-   - Do NOT use ==highlight syntax==
 
 **Example Response Structure:**
+🔬 **Research Overview**
 
-🔬 **Research Overview:**
+Key findings show that ==microgravity== significantly impacts cellular behavior:
 
-• **Microgravity** significantly impacts cellular behavior in multiple ways
-• Studies show **altered gene expression** in space environments
-• **Bone density loss** is one of the most critical concerns
+• Effect 1 with ==highlighted term==
+• Effect 2 with ==another key term==
+• Effect 3
 
 📚 **Relevant Studies:**
+- [Study Title 1](link) found that...
+- [Study Title 2](link) demonstrated...
 
-• [Study Title 1](link) - Found that **key finding** about microgravity
-• [Study Title 2](link) - Demonstrated **important result** in space biology
-  - Sub-finding with additional context
-  - Another relevant detail
-
-**Remember:** Use bullet points for everything, make important terms **bold**, and ALWAYS include study links!${publicationsContext}`,
+**Remember:** ALWAYS include clickable study links and use == for highlighting!${publicationsContext}`,
           },
           ...messages,
         ],
