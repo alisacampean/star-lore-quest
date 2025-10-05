@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Brain, Dna, Beaker, Microscope, Orbit, Radiation, Satellite, Sprout, Rocket as RocketIcon, ArrowLeft, X, ExternalLink } from "lucide-react";
+import { Brain, Dna, Beaker, Microscope, Orbit, Radiation, Satellite, Sprout, Rocket as RocketIcon, ArrowLeft, X, ExternalLink, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Publication } from "@/types/publication";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -646,10 +646,16 @@ export default function SpaceJourney() {
                   <p className="text-sm text-muted-foreground font-mono mb-4">
                     Top 3 most relevant studies on {selectedTopic.title}
                   </p>
-                  {topPublications.map((pub) => (
+                   {topPublications.map((pub) => (
                     <div key={pub.id} className="circuit-frame bg-background/50 p-4 space-y-3">
                       <h3 className="font-bold text-primary line-clamp-2">{pub.title}</h3>
-                      <div className="flex items-center justify-end">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => navigate('/assistant', { state: { question: `Tell me about: ${pub.title}` } })}
+                          className="flex items-center gap-1 text-sm text-accent hover:text-primary transition-colors"
+                        >
+                          <MessageSquare className="w-3 h-3" /> Ask AI
+                        </button>
                         <a
                           href={pub.link}
                           target="_blank"

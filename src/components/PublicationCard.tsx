@@ -1,9 +1,10 @@
 import { Publication } from "@/types/publication";
-import { Calendar, User, Microscope, ExternalLink } from "lucide-react";
+import { Calendar, User, Microscope, ExternalLink, MessageSquare } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { NecronButton } from "./NecronButton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useNavigate } from "react-router-dom";
 
 interface PublicationCardProps {
   publication: Publication;
@@ -11,7 +12,12 @@ interface PublicationCardProps {
 }
 
 export const PublicationCard = ({ publication, highlightQuery }: PublicationCardProps) => {
+  const navigate = useNavigate();
   const displayLink = publication.link || publication.publication_url;
+
+  const handleAskAI = () => {
+    navigate('/assistant', { state: { question: `Tell me about: ${publication.title}` } });
+  };
 
   const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const highlight = (text?: string) => {
@@ -77,17 +83,28 @@ export const PublicationCard = ({ publication, highlightQuery }: PublicationCard
         )}
       </div>
 
-      {displayLink && (
+      <div className="flex gap-2">
+        {displayLink && (
+          <NecronButton
+            size="sm"
+            variant="primary"
+            className="flex-1"
+            onClick={() => window.open(displayLink, '_blank')}
+          >
+            <ExternalLink className="w-4 h-4 mr-2" />
+            View Full Publication
+          </NecronButton>
+        )}
         <NecronButton
           size="sm"
-          variant="primary"
-          className="w-full"
-          onClick={() => window.open(displayLink, '_blank')}
+          variant="ghost"
+          className={displayLink ? "" : "w-full"}
+          onClick={handleAskAI}
         >
-          <ExternalLink className="w-4 h-4 mr-2" />
-          View Full Publication
+          <MessageSquare className="w-4 h-4 mr-2" />
+          Ask AI
         </NecronButton>
-      )}
+      </div>
     </div>
   );
 };

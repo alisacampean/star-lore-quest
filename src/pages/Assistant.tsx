@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { AIChat } from "@/components/AIChat";
 import { NecronButton } from "@/components/NecronButton";
 import { Home, Database, Network, Info } from "lucide-react";
@@ -7,7 +7,15 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Assistant = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [selectedQuestion, setSelectedQuestion] = useState<string | null>(null);
+
+  // Handle pre-populated question from navigation state
+  useEffect(() => {
+    if (location.state?.question) {
+      setSelectedQuestion(location.state.question);
+    }
+  }, [location.state]);
 
   return (
     <div className="min-h-screen bg-background">
