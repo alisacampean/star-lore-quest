@@ -2,12 +2,19 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { KnowledgeGraph } from "@/components/KnowledgeGraph";
 import { NecronButton } from "@/components/NecronButton";
-import { Home, Database, Brain, Info, Maximize2 } from "lucide-react";
+import { SearchBar } from "@/components/SearchBar";
+import { Home, Database, Brain, Info, Maximize2, X } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Publication } from "@/types/publication";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 
 const Knowledge = () => {
   const navigate = useNavigate();
-  const [selectedPublication, setSelectedPublication] = useState<string | null>(null);
+  const [selectedPublications, setSelectedPublications] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const toggleFullscreen = () => {
@@ -18,6 +25,50 @@ const Knowledge = () => {
       document.exitFullscreen();
       setIsFullscreen(false);
     }
+  };
+
+  const { data: searchResults = [] } = useQuery({
+    queryKey: ["publication-search", searchQuery],
+    queryFn: async () => {
+      if (!searchQuery.trim()) return [];
+      
+      const { data, error } = await supabase
+        .from("publications")
+        .select("*")
+        .or(`title.ilike.%${searchQuery}%,abstract.ilike.%${searchQuery}%,authors.ilike.%${searchQuery}%`)
+        .limit(10);
+
+      if (error) throw error;
+      return data as Publication[];
+    },
+    enabled: searchQuery.length > 0,
+  });
+
+  const { data: selectedPubs = [] } = useQuery({
+    queryKey: ["selected-publications", selectedPublications],
+    queryFn: async () => {
+      if (selectedPublications.length === 0) return [];
+      
+      const { data, error } = await supabase
+        .from("publications")
+        .select("*")
+        .in("id", selectedPublications);
+
+      if (error) throw error;
+      return data as Publication[];
+    },
+    enabled: selectedPublications.length > 0,
+  });
+
+  const addPublication = (id: string) => {
+    if (!selectedPublications.includes(id)) {
+      setSelectedPublications([...selectedPublications, id]);
+    }
+    setSearchQuery("");
+  };
+
+  const removePublication = (id: string) => {
+    setSelectedPublications(selectedPublications.filter(pubId => pubId !== id));
   };
 
   return (
@@ -48,84 +99,134 @@ const Knowledge = () => {
           <Alert className="bg-card border-accent/30">
             <Info className="h-4 w-4 text-accent" />
             <AlertDescription className="text-sm font-mono">
-              This interactive graph visualizes relationships between publications. 
-              Hover over nodes to see publication titles. Click and drag to explore connections.
-              Lines show research relationships and citations between papers.
+              Search and add publications to visualize relationships. 
+              Click on nodes to open publications. Related topics are automatically connected.
             </AlertDescription>
           </Alert>
         </div>
       </div>
 
-      {/* Graph Section */}
+      {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        <div className="space-y-6">
-          {/* Controls */}
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <h2 className="text-xl font-bold font-mono text-accent">
-                RESEARCH NETWORK VISUALIZATION
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Explore interconnected space biology research
-              </p>
+        <div className="grid lg:grid-cols-[300px_1fr_300px] gap-6">
+          {/* Left Panel - Search & Add */}
+          <div className="space-y-4">
+            <div className="circuit-frame bg-card p-4">
+              <h3 className="text-lg font-bold font-mono text-accent mb-4">
+                ADD PUBLICATIONS
+              </h3>
+              <SearchBar 
+                onSearch={setSearchQuery} 
+                placeholder="Search to add..."
+                initialValue={searchQuery}
+              />
+              
+              {searchQuery && (
+                <ScrollArea className="h-[400px] mt-4">
+                  <div className="space-y-2">
+                    {searchResults.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        No results found
+                      </p>
+                    ) : (
+                      searchResults.map((pub) => (
+                        <div
+                          key={pub.id}
+                          className="p-3 border border-border hover:border-primary/50 transition-colors cursor-pointer"
+                          onClick={() => addPublication(pub.id)}
+                        >
+                          <p className="text-sm font-mono text-foreground line-clamp-2">
+                            {pub.title}
+                          </p>
+                          {pub.year && (
+                            <Badge variant="outline" className="mt-2 text-xs">
+                              {pub.year}
+                            </Badge>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </ScrollArea>
+              )}
             </div>
-            <NecronButton onClick={toggleFullscreen} size="sm" variant="secondary">
-              <Maximize2 className="w-4 h-4 mr-2" />
-              {isFullscreen ? "Exit" : "Fullscreen"}
-            </NecronButton>
           </div>
 
-          {/* Legend */}
-          <div className="circuit-frame bg-card p-4">
-            <div className="flex flex-wrap gap-6 text-sm font-mono">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-primary" />
-                <span>Publication Node</span>
+          {/* Center - Graph */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <h2 className="text-xl font-bold font-mono text-accent">
+                  RESEARCH NETWORK
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {selectedPublications.length} publication{selectedPublications.length !== 1 ? 's' : ''} selected
+                </p>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-accent" />
-                <span>Selected/Highlighted</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-12 h-0.5 bg-accent" />
-                <span>Research Connection</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-                <span>Active Flow</span>
-              </div>
+              <NecronButton onClick={toggleFullscreen} size="sm" variant="secondary">
+                <Maximize2 className="w-4 h-4 mr-2" />
+                {isFullscreen ? "Exit" : "Fullscreen"}
+              </NecronButton>
             </div>
+
+            <KnowledgeGraph selectedPublicationIds={selectedPublications} />
           </div>
 
-          {/* Graph */}
-          <div className="flex justify-center">
-            <KnowledgeGraph selectedPublicationId={selectedPublication} />
-          </div>
-
-          {/* Info Panel */}
-          <div className="circuit-frame bg-card p-6 space-y-4">
-            <h3 className="text-lg font-bold font-mono text-accent">
-              GRAPH INSIGHTS
-            </h3>
-            <div className="grid md:grid-cols-3 gap-4 text-sm">
-              <div className="space-y-1">
-                <p className="text-muted-foreground font-mono">Network Density</p>
-                <p className="text-2xl font-bold text-primary">High</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-muted-foreground font-mono">Central Topics</p>
-                <p className="text-lg text-foreground">Microgravity, Radiation, Genetics</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-muted-foreground font-mono">Time Span</p>
-                <p className="text-lg text-foreground">1990 - 2024</p>
-              </div>
+          {/* Right Panel - Selected Publications */}
+          <div className="space-y-4">
+            <div className="circuit-frame bg-card p-4">
+              <h3 className="text-lg font-bold font-mono text-accent mb-4">
+                SELECTED ({selectedPublications.length})
+              </h3>
+              
+              <ScrollArea className="h-[500px]">
+                <div className="space-y-2">
+                  {selectedPubs.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-8">
+                      No publications selected.
+                      <br />
+                      Search and click to add.
+                    </p>
+                  ) : (
+                    selectedPubs.map((pub) => (
+                      <div
+                        key={pub.id}
+                        className="p-3 border border-border group relative"
+                      >
+                        <button
+                          onClick={() => removePublication(pub.id)}
+                          className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center bg-destructive/10 hover:bg-destructive/20 text-destructive transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                        
+                        <a
+                          href={pub.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm font-mono text-foreground hover:text-primary line-clamp-3 pr-8 block"
+                        >
+                          {pub.title}
+                        </a>
+                        
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {pub.year && (
+                            <Badge variant="outline" className="text-xs">
+                              {pub.year}
+                            </Badge>
+                          )}
+                          {pub.research_area && (
+                            <Badge variant="secondary" className="text-xs">
+                              {pub.research_area}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
             </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              This knowledge graph represents decades of interconnected space biology research. 
-              Stronger connections indicate more citations, shared authors, or related research topics. 
-              The visualization helps identify research clusters, influential papers, and emerging trends in the field.
-            </p>
           </div>
         </div>
       </div>

@@ -1,75 +1,107 @@
 import { useEffect, useRef, useState } from "react";
 import ForceGraph2D from "react-force-graph-2d";
 import { supabase } from "@/integrations/supabase/client";
-import { GraphNode, GraphLink } from "@/types/publication";
+import { GraphNode, GraphLink, Publication } from "@/types/publication";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface KnowledgeGraphProps {
-  selectedPublicationId?: string | null;
+  selectedPublicationIds: string[];
 }
 
-export const KnowledgeGraph = ({ selectedPublicationId }: KnowledgeGraphProps) => {
+export const KnowledgeGraph = ({ selectedPublicationIds }: KnowledgeGraphProps) => {
   const [graphData, setGraphData] = useState<{ nodes: GraphNode[]; links: GraphLink[] }>({
     nodes: [],
     links: [],
   });
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [publications, setPublications] = useState<Publication[]>([]);
   const graphRef = useRef<any>();
 
   useEffect(() => {
     loadGraphData();
-  }, []);
-
-  useEffect(() => {
-    if (selectedPublicationId && graphRef.current) {
-      const node = graphData.nodes.find(n => n.id === selectedPublicationId);
-      if (node) {
-        graphRef.current.centerAt(node.x, node.y, 1000);
-        graphRef.current.zoom(3, 1000);
-      }
-    }
-  }, [selectedPublicationId, graphData.nodes]);
+  }, [selectedPublicationIds]);
 
   const loadGraphData = async () => {
+    if (selectedPublicationIds.length === 0) {
+      setGraphData({ nodes: [], links: [] });
+      setPublications([]);
+      return;
+    }
+
     try {
       setIsLoading(true);
 
-      // Use mock data for knowledge graph demo
-      console.log("Using mock data for knowledge graph");
-      
-      // Create mock data for demo purposes
-      const mockPubs = Array.from({ length: 50 }, (_, i) => ({
-        id: `pub-${i}`,
-        title: `Space Biology Study ${i + 1}`,
-        year: 2000 + Math.floor(Math.random() * 24),
-        research_area: ["Microgravity Effects", "Radiation Biology", "Plant Growth", "Cellular Biology", "Bone Density"][Math.floor(Math.random() * 5)]
-      }));
-      
-      const mockConnections = Array.from({ length: 80 }, (_, i) => ({
-        source_publication_id: `pub-${Math.floor(Math.random() * 50)}`,
-        target_publication_id: `pub-${Math.floor(Math.random() * 50)}`,
-        connection_type: "related",
-        strength: Math.random() * 3 + 1
-      })).filter(c => c.source_publication_id !== c.target_publication_id);
+      const { data: pubs, error } = await supabase
+        .from("publications")
+        .select("*")
+        .in("id", selectedPublicationIds);
 
-      const nodes: GraphNode[] = mockPubs.map((pub) => ({
+      if (error) throw error;
+      if (!pubs) return;
+
+      setPublications(pubs);
+
+      const nodes: GraphNode[] = pubs.map((pub) => ({
         id: pub.id,
         title: pub.title,
-        year: pub.year,
-        research_area: pub.research_area,
+        year: pub.year || undefined,
+        research_area: pub.research_area || undefined,
         val: 5,
+        link: pub.link,
       }));
 
-      const links: GraphLink[] = mockConnections.map((conn) => ({
-        source: conn.source_publication_id,
-        target: conn.target_publication_id,
-        type: conn.connection_type,
-        strength: conn.strength,
-      }));
+      // Create connections based on shared attributes
+      const links: GraphLink[] = [];
+      for (let i = 0; i < pubs.length; i++) {
+        for (let j = i + 1; j < pubs.length; j++) {
+          const pub1 = pubs[i];
+          const pub2 = pubs[j];
+          let strength = 0;
+
+          // Connect if same research area
+          if (pub1.research_area && pub2.research_area && 
+              pub1.research_area === pub2.research_area) {
+            strength += 2;
+          }
+
+          // Connect if same organism
+          if (pub1.organism && pub2.organism && 
+              pub1.organism === pub2.organism) {
+            strength += 1.5;
+          }
+
+          // Connect if same experiment type
+          if (pub1.experiment_type && pub2.experiment_type && 
+              pub1.experiment_type === pub2.experiment_type) {
+            strength += 1;
+          }
+
+          // Connect if shared author (simple check)
+          if (pub1.authors && pub2.authors) {
+            const authors1 = pub1.authors.split(',').map(a => a.trim().toLowerCase());
+            const authors2 = pub2.authors.split(',').map(a => a.trim().toLowerCase());
+            const sharedAuthors = authors1.filter(a => authors2.includes(a));
+            if (sharedAuthors.length > 0) {
+              strength += sharedAuthors.length;
+            }
+          }
+
+          if (strength > 0) {
+            links.push({
+              source: pub1.id,
+              target: pub2.id,
+              type: "related",
+              strength: strength,
+            });
+          }
+        }
+      }
 
       setGraphData({ nodes, links });
-      toast.success(`Knowledge graph loaded: ${nodes.length} publications, ${links.length} connections`);
+      if (pubs.length > 0) {
+        toast.success(`Graph updated: ${nodes.length} publications, ${links.length} connections`);
+      }
     } catch (error) {
       console.error("Failed to load graph data:", error);
       toast.error("Failed to load knowledge graph");
@@ -80,10 +112,21 @@ export const KnowledgeGraph = ({ selectedPublicationId }: KnowledgeGraphProps) =
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full bg-card circuit-frame">
+      <div className="flex items-center justify-center h-[600px] bg-card circuit-frame">
         <div className="text-center space-y-4">
           <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
           <p className="text-sm text-muted-foreground font-mono">Loading knowledge graph...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (graphData.nodes.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-[600px] bg-card circuit-frame">
+        <div className="text-center space-y-4">
+          <p className="text-muted-foreground font-mono">No publications selected</p>
+          <p className="text-sm text-muted-foreground">Search and add publications to visualize</p>
         </div>
       </div>
     );
@@ -107,41 +150,50 @@ export const KnowledgeGraph = ({ selectedPublicationId }: KnowledgeGraphProps) =
       <ForceGraph2D
         ref={graphRef}
         graphData={graphData}
-        width={800}
+        width={typeof window !== 'undefined' ? Math.min(window.innerWidth * 0.5, 800) : 800}
         height={600}
         nodeLabel={(node: any) => node.title}
-        nodeColor={(node: any) =>
-          node.id === selectedPublicationId ? "hsl(var(--accent))" : "hsl(var(--primary))"
-        }
-        nodeRelSize={5}
-        linkColor={() => "hsl(var(--accent))"}
-        linkWidth={(link: any) => (link.strength || 1) * 2}
-        linkDirectionalParticles={2}
-        linkDirectionalParticleSpeed={0.005}
+        nodeColor={() => "hsl(var(--primary))"}
+        nodeRelSize={6}
+        linkColor={(link: any) => {
+          const strength = link.strength || 1;
+          const opacity = Math.min(strength / 5, 1);
+          return `hsla(var(--accent), ${opacity})`;
+        }}
+        linkWidth={(link: any) => Math.min((link.strength || 1) * 1.5, 6)}
+        linkDirectionalParticles={(link: any) => Math.ceil((link.strength || 1) / 2)}
+        linkDirectionalParticleSpeed={0.003}
         backgroundColor="hsl(var(--card))"
+        onNodeClick={(node: any) => {
+          if (node.link) {
+            window.open(node.link, '_blank');
+          }
+        }}
         nodeCanvasObject={(node: any, ctx, globalScale) => {
           const label = node.title;
-          const fontSize = 12 / globalScale;
+          const fontSize = 10 / globalScale;
           ctx.font = `${fontSize}px monospace`;
-          ctx.fillStyle = node.id === selectedPublicationId
-            ? "hsl(180 100% 50%)"
-            : "hsl(150 100% 50%)";
+          
+          // Draw node
+          ctx.fillStyle = "hsl(150 100% 50%)";
           ctx.beginPath();
           ctx.arc(node.x, node.y, node.val, 0, 2 * Math.PI, false);
           ctx.fill();
 
-          if (node.id === selectedPublicationId) {
-            ctx.shadowColor = "hsl(180 100% 50%)";
-            ctx.shadowBlur = 15;
-            ctx.fill();
-            ctx.shadowBlur = 0;
-          }
+          // Add glow effect
+          ctx.shadowColor = "hsl(150 100% 50%)";
+          ctx.shadowBlur = 10;
+          ctx.fill();
+          ctx.shadowBlur = 0;
 
+          // Draw label if zoomed in
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.fillStyle = "hsl(150 100% 95%)";
-          if (globalScale > 2) {
-            ctx.fillText(label.substring(0, 20) + "...", node.x, node.y + 10);
+          if (globalScale > 1.5) {
+            const maxLength = Math.floor(30 / globalScale * 2);
+            const text = label.length > maxLength ? label.substring(0, maxLength) + "..." : label;
+            ctx.fillText(text, node.x, node.y + node.val + 8);
           }
         }}
       />

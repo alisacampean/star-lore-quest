@@ -20,6 +20,7 @@ export interface GraphNode {
   val: number;
   x?: number;
   y?: number;
+  link?: string;
 }
 
 export interface GraphLink {
