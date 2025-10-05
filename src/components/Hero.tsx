@@ -1,7 +1,8 @@
-import { Brain, Database, Network } from "lucide-react";
+import { Brain, Database, Network, Rocket } from "lucide-react";
 import { SearchBar } from "./SearchBar";
 import heroBg from "@/assets/hero-bg.jpg";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 interface HeroProps {
   onSearch: (query: string) => void;
@@ -9,9 +10,36 @@ interface HeroProps {
 
 export const Hero = ({ onSearch }: HeroProps) => {
   const navigate = useNavigate();
+  const [isLaunching, setIsLaunching] = useState(false);
+
+  const handleSpaceshipClick = () => {
+    setIsLaunching(true);
+    setTimeout(() => {
+      navigate('/topics');
+    }, 1200);
+  };
 
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Animated Spaceship Button */}
+      <button
+        onClick={handleSpaceshipClick}
+        disabled={isLaunching}
+        className={`
+          fixed top-8 right-8 z-50 p-4 circuit-frame bg-card/80 hover:bg-card
+          transition-all duration-300 hover:scale-110 group
+          ${isLaunching ? 'animate-launch' : ''}
+        `}
+        style={{
+          animation: isLaunching ? 'launch 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards' : 'none'
+        }}
+      >
+        <Rocket className={`
+          w-6 h-6 text-accent transition-all duration-300
+          ${isLaunching ? 'animate-spin' : 'group-hover:rotate-[-45deg]'}
+        `} />
+        <div className="absolute inset-0 bg-accent/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      </button>
       {/* Background image */}
       <div
         className="absolute inset-0 opacity-20"
