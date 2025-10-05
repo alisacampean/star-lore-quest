@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Brain, Dna, Beaker, Microscope, Orbit, Radiation, Satellite, Sprout, Rocket as RocketIcon, ArrowLeft } from "lucide-react";
+import { Brain, Dna, Beaker, Microscope, Orbit, Radiation, Satellite, Sprout, Rocket as RocketIcon, ArrowLeft, X, ExternalLink } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Publication } from "@/types/publication";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import earthImg from "@/assets/earth.png";
 import nebula1Img from "@/assets/nebula1.png";
 import nebula2Img from "@/assets/nebula2.png";
@@ -100,6 +103,9 @@ export default function SpaceJourney() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeTopicId, setActiveTopicId] = useState<string | null>(null);
+  const [selectedTopic, setSelectedTopic] = useState<typeof topics[0] | null>(null);
+  const [topPublications, setTopPublications] = useState<Publication[]>([]);
+  const [loadingPublications, setLoadingPublications] = useState(false);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -144,9 +150,32 @@ export default function SpaceJourney() {
     };
   }, []);
 
-  const handleTopicClick = (topicId: string) => {
-    if (topicId === "start") return;
-    navigate(`/explorer?topic=${topicId}`);
+  const handleTopicClick = async (topic: Topic) => {
+    if (topic.id === "start") return;
+    
+    setSelectedTopic(topic);
+    setLoadingPublications(true);
+    
+    try {
+      const { data, error } = await supabase
+        .from('publications')
+        .select('*')
+        .ilike('title', `%${topic.title}%`)
+        .limit(3);
+      
+      if (error) throw error;
+      setTopPublications(data || []);
+    } catch (error) {
+      console.error('Error fetching publications:', error);
+      setTopPublications([]);
+    } finally {
+      setLoadingPublications(false);
+    }
+  };
+
+  const closeDashboard = () => {
+    setSelectedTopic(null);
+    setTopPublications([]);
   };
 
   return (
@@ -495,7 +524,7 @@ export default function SpaceJourney() {
                   top: `${topic.top}%`,
                   transform: 'translate(-50%, -50%)'
                 }}
-                onClick={() => handleTopicClick(topic.id)}
+                onClick={() => handleTopicClick(topic)}
               >
                 {/* Glow effect */}
                 <div 
@@ -574,6 +603,70 @@ export default function SpaceJourney() {
           Scroll horizontally to explore • Click topics to view publications
         </p>
       </div>
+
+      {/* Topic Dashboard Panel */}
+      {selectedTopic && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="circuit-frame bg-card w-full max-w-2xl max-h-[80vh] m-4 flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-primary/20">
+              <div className="flex items-center gap-3">
+                <selectedTopic.icon className="w-8 h-8 text-primary" />
+                <h2 className="text-2xl font-bold font-mono text-primary">{selectedTopic.title}</h2>
+              </div>
+              <button
+                onClick={closeDashboard}
+                className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-primary" />
+              </button>
+            </div>
+
+            <ScrollArea className="flex-1 p-6">
+              {loadingPublications ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                </div>
+              ) : topPublications.length > 0 ? (
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground font-mono mb-4">
+                    Top 3 most relevant studies on {selectedTopic.title}
+                  </p>
+                  {topPublications.map((pub) => (
+                    <div key={pub.id} className="circuit-frame bg-background/50 p-4 space-y-3">
+                      <h3 className="font-bold text-primary line-clamp-2">{pub.title}</h3>
+                      {pub.abstract && (
+                        <p className="text-sm text-foreground/80 line-clamp-3">{pub.abstract}</p>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <div className="flex gap-2 text-xs text-muted-foreground">
+                          {pub.year && <span>{pub.year}</span>}
+                          {pub.authors && <span>• {pub.authors.split(',')[0]}</span>}
+                        </div>
+                        {pub.publication_url && (
+                          <a
+                            href={pub.publication_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-sm text-primary hover:text-accent transition-colors"
+                          >
+                            View <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground font-mono">
+                    No publications found for this topic yet.
+                  </p>
+                </div>
+              )}
+            </ScrollArea>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
