@@ -54,7 +54,7 @@ export const PublicationFilters = ({ filters, onFiltersChange }: PublicationFilt
             <SelectTrigger className="bg-input border-primary/30">
               <SelectValue placeholder="From" />
             </SelectTrigger>
-            <SelectContent className="bg-card border-primary/30">
+            <SelectContent className="z-50 bg-card border-primary/30">
               {[2024, 2020, 2015, 2010, 2005, 2000, 1995, 1990].map(year => (
                 <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
               ))}
@@ -69,7 +69,7 @@ export const PublicationFilters = ({ filters, onFiltersChange }: PublicationFilt
             <SelectTrigger className="bg-input border-primary/30">
               <SelectValue placeholder="To" />
             </SelectTrigger>
-            <SelectContent className="bg-card border-primary/30">
+            <SelectContent className="z-50 bg-card border-primary/30">
               {[2024, 2020, 2015, 2010, 2005, 2000, 1995, 1990].map(year => (
                 <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
               ))}

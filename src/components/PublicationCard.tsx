@@ -7,16 +7,31 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface PublicationCardProps {
   publication: Publication;
+  highlightQuery?: string;
 }
 
-export const PublicationCard = ({ publication }: PublicationCardProps) => {
+export const PublicationCard = ({ publication, highlightQuery }: PublicationCardProps) => {
   const displayLink = publication.link || publication.publication_url;
-  
+
+  const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const highlight = (text?: string) => {
+    if (!text) return null;
+    if (!highlightQuery || highlightQuery.trim().length < 2) return text;
+    const pattern = new RegExp(`(${escapeRegExp(highlightQuery)})`, "ig");
+    return text.split(pattern).map((part, i) =>
+      pattern.test(part) ? (
+        <mark key={i} className="bg-primary/20 text-foreground rounded px-1">{part}</mark>
+      ) : (
+        <span key={i}>{part}</span>
+      )
+    );
+  };
+
   return (
     <div className="circuit-frame bg-card p-6 space-y-4 hover:bg-card/80 transition-all">
       <div className="space-y-3">
         <h3 className="text-lg font-bold font-mono text-primary">
-          {publication.title}
+          {highlight(publication.title) || publication.title}
         </h3>
 
         <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
@@ -29,7 +44,7 @@ export const PublicationCard = ({ publication }: PublicationCardProps) => {
           {publication.authors && (
             <div className="flex items-center gap-1">
               <User className="w-4 h-4" />
-              <span className="line-clamp-1">{publication.authors.split(',')[0]}</span>
+              <span className="line-clamp-1">{highlight(publication.authors.split(',')[0])}</span>
             </div>
           )}
         </div>
@@ -52,7 +67,7 @@ export const PublicationCard = ({ publication }: PublicationCardProps) => {
           <div className="space-y-2 pt-2 border-t border-primary/20">
             <h4 className="text-xs font-bold font-mono text-accent uppercase">Summary</h4>
             <p className="text-sm text-foreground/80 line-clamp-4">
-              {publication.abstract}
+              {highlight(publication.abstract) || publication.abstract}
             </p>
           </div>
         ) : (

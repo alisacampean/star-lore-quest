@@ -42,22 +42,68 @@ const Explorer = () => {
         query = query.lte("year", filters.yearRange[1]);
       }
 
-      // Apply organism filter with case-insensitive matching
+      // Apply organism filter with synonyms and case-insensitive matching
       if (filters.organisms.length > 0) {
-        const organismConditions = filters.organisms.map(org => `organism.ilike.%${org}%`).join(',');
-        query = query.or(organismConditions);
+        const ORGANISM_SYNONYMS: Record<string, string[]> = {
+          "Humans": ["human", "homo sapiens"],
+          "Mice": ["mouse", "mice", "murine", "mus musculus"],
+          "Rats": ["rat", "rattus"],
+          "C. elegans": ["c. elegans", "caenorhabditis elegans"],
+          "Drosophila": ["drosophila", "fruit fly", "d. melanogaster", "drosophila melanogaster"],
+          "Plants": ["plant", "arabidopsis", "zea mays", "oryza", "glycine max"],
+          "Bacteria": ["bacteria", "bacterium", "e. coli", "escherichia coli", "bacillus"],
+          "Yeast": ["yeast", "saccharomyces cerevisiae"],
+          "Other": []
+        };
+        const organismConditions = filters.organisms
+          .flatMap(org => (ORGANISM_SYNONYMS[org] && ORGANISM_SYNONYMS[org].length > 0) ? ORGANISM_SYNONYMS[org] : [org])
+          .map(s => `organism.ilike.%${s}%`)
+          .join(',');
+        if (organismConditions) {
+          query = query.or(organismConditions);
+        }
       }
 
-      // Apply research area filter with case-insensitive matching
+      // Apply research area filter with synonyms and case-insensitive matching
       if (filters.researchArea.length > 0) {
-        const areaConditions = filters.researchArea.map(area => `research_area.ilike.%${area}%`).join(',');
-        query = query.or(areaConditions);
+        const AREA_SYNONYMS: Record<string, string[]> = {
+          "Microgravity Effects": ["microgravity", "spaceflight", "space flight", "weightlessness", "gravity unloading"],
+          "Radiation Biology": ["radiation", "cosmic radiation", "ionizing radiation", "space radiation"],
+          "Life Support": ["life support", "eclss", "environmental control", "closed-loop"],
+          "Plant Biology": ["plant", "botany", "crop"],
+          "Neuroscience": ["neuro", "brain", "cns"],
+          "Cardiovascular": ["cardio", "heart", "vascular"],
+          "Bone & Muscle": ["bone", "muscle", "skeletal", "osteoporosis", "atrophy"],
+          "Immunology": ["immune", "immunology", "inflammation"],
+          "Genetics": ["genetic", "genomics", "gene", "transcriptomic"],
+          "Other": []
+        };
+        const areaConditions = filters.researchArea
+          .flatMap(a => (AREA_SYNONYMS[a] && AREA_SYNONYMS[a].length > 0) ? AREA_SYNONYMS[a] : [a])
+          .map(s => `research_area.ilike.%${s}%`)
+          .join(',');
+        if (areaConditions) {
+          query = query.or(areaConditions);
+        }
       }
 
-      // Apply experiment type filter with case-insensitive matching
+      // Apply experiment type filter with synonyms and case-insensitive matching
       if (filters.experimentType.length > 0) {
-        const typeConditions = filters.experimentType.map(type => `experiment_type.ilike.%${type}%`).join(',');
-        query = query.or(typeConditions);
+        const TYPE_SYNONYMS: Record<string, string[]> = {
+          "ISS Mission": ["iss", "international space station", "space station", "mission"],
+          "Space Shuttle": ["space shuttle", "sts"],
+          "Ground Analog": ["ground analog", "bed rest", "hindlimb unloading", "hind limb unloading"],
+          "Parabolic Flight": ["parabolic flight", "parabola", "parabolic"],
+          "Laboratory Study": ["laboratory", "in vitro", "in vivo", "bench"],
+          "Field Study": ["field study", "fieldwork", "observational"]
+        };
+        const typeConditions = filters.experimentType
+          .flatMap(t => (TYPE_SYNONYMS[t] && TYPE_SYNONYMS[t].length > 0) ? TYPE_SYNONYMS[t] : [t])
+          .map(s => `experiment_type.ilike.%${s}%`)
+          .join(',');
+        if (typeConditions) {
+          query = query.or(typeConditions);
+        }
       }
 
       const { data, error } = await query.order("created_at", { ascending: false }).limit(100);
@@ -214,7 +260,7 @@ const Explorer = () => {
                 </div>
                 <div className="grid gap-6">
                   {publications.map((publication) => (
-                    <PublicationCard key={publication.id} publication={publication} />
+                    <PublicationCard key={publication.id} publication={publication} highlightQuery={searchQuery} />
                   ))}
                 </div>
               </>
