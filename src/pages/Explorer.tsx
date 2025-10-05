@@ -180,7 +180,7 @@ const Explorer = () => {
               <Download className="w-4 h-4 mr-2" />
               Export Results
             </NecronButton>
-            <NecronButton onClick={handleImport} size="sm" variant="primary">
+            <NecronButton onClick={handleImport} size="sm" variant="primary" disabled>
               <Database className="w-4 h-4 mr-2" />
               Import CSV Data
             </NecronButton>
