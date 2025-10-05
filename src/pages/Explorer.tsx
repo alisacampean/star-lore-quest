@@ -4,7 +4,6 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Publication } from "@/types/publication";
 import { PublicationCard } from "@/components/PublicationCard";
-import { PublicationFilters } from "@/components/PublicationFilters";
 import { SearchBar } from "@/components/SearchBar";
 import { NecronButton } from "@/components/NecronButton";
 import { Database, Download, Loader2, Home, Brain, Network } from "lucide-react";
@@ -16,16 +15,10 @@ const Explorer = () => {
   const initialQuery = searchParams.get("q") || "";
   
   const [searchQuery, setSearchQuery] = useState(initialQuery);
-  const [filters, setFilters] = useState({
-    yearRange: [null, null] as [number | null, number | null],
-    organisms: [] as string[],
-    researchArea: [] as string[],
-    experimentType: [] as string[],
-  });
 
   // Fetch publications from database
   const { data: publications = [], isLoading } = useQuery({
-    queryKey: ["publications", searchQuery, filters],
+    queryKey: ["publications", searchQuery],
     queryFn: async () => {
       let query = supabase.from("publications").select("*");
 
@@ -34,7 +27,7 @@ const Explorer = () => {
         query = query.ilike("title", `%${searchQuery}%`);
       }
 
-      const { data, error } = await query.order("created_at", { ascending: false });
+      const { data, error } = await query.order("created_at", { ascending: false }).limit(50);
 
       if (error) {
         console.error("Error fetching publications:", error);
@@ -139,14 +132,9 @@ const Explorer = () => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-4 gap-8">
-          {/* Filters Sidebar */}
-          <div className="lg:col-span-1">
-            <PublicationFilters filters={filters} onFiltersChange={setFilters} />
-          </div>
-
+        <div className="max-w-6xl mx-auto">
           {/* Publications Grid */}
-          <div className="lg:col-span-3">
+          <div>
             {isLoading ? (
               <div className="flex items-center justify-center h-64">
                 <div className="text-center space-y-4">
