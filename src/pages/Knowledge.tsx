@@ -16,6 +16,7 @@ const Knowledge = () => {
   const navigate = useNavigate();
   const [selectedPublications, setSelectedPublications] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSearchQuery, setSelectedSearchQuery] = useState("");
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const toggleFullscreen = () => {
@@ -89,6 +90,22 @@ const Knowledge = () => {
       toast.error("Failed to load publications");
     }
   };
+
+  const clearAllPublications = () => {
+    setSelectedPublications([]);
+    toast.success("Cleared all publications from graph");
+  };
+
+  // Filter selected publications by search query
+  const filteredSelectedPubs = selectedPubs.filter(pub => {
+    if (!selectedSearchQuery.trim()) return true;
+    const query = selectedSearchQuery.toLowerCase();
+    return (
+      pub.title.toLowerCase().includes(query) ||
+      pub.abstract?.toLowerCase().includes(query) ||
+      pub.research_area?.toLowerCase().includes(query)
+    );
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -203,11 +220,32 @@ const Knowledge = () => {
           {/* Right Panel - Selected Publications */}
           <div className="space-y-4">
             <div className="circuit-frame bg-card p-4">
-              <h3 className="text-lg font-bold font-mono text-accent mb-4">
-                SELECTED ({selectedPublications.length})
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold font-mono text-accent">
+                  SELECTED ({selectedPublications.length})
+                </h3>
+                <NecronButton 
+                  onClick={clearAllPublications} 
+                  size="sm" 
+                  variant="secondary"
+                  disabled={selectedPublications.length === 0}
+                  className="hover:bg-destructive hover:text-destructive-foreground"
+                >
+                  Clear All
+                </NecronButton>
+              </div>
               
-              <ScrollArea className="h-[500px]">
+              <div className="mb-4">
+                <input
+                  type="text"
+                  value={selectedSearchQuery}
+                  onChange={(e) => setSelectedSearchQuery(e.target.value)}
+                  placeholder="Filter selected..."
+                  className="w-full px-3 py-2 bg-input border border-primary/30 text-foreground placeholder:text-muted-foreground text-sm font-mono"
+                />
+              </div>
+              
+              <ScrollArea className="h-[450px]">
                 <div className="space-y-2">
                   {selectedPubs.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-8">
@@ -215,8 +253,12 @@ const Knowledge = () => {
                       <br />
                       Search and click to add.
                     </p>
+                  ) : filteredSelectedPubs.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-8">
+                      No publications match your filter.
+                    </p>
                   ) : (
-                    selectedPubs.map((pub) => (
+                    filteredSelectedPubs.map((pub) => (
                       <div
                         key={pub.id}
                         className="p-3 border border-border group relative"
