@@ -23,81 +23,44 @@ const Explorer = () => {
     experimentType: [] as string[],
   });
 
-  // Mock data for demonstration
-  const mockPublications: Publication[] = Array.from({ length: 20 }, (_, i) => ({
-    id: `pub-${i}`,
-    title: `Space Biology Research Publication ${i + 1}: Effects of Microgravity on ${["Cellular Structure", "Gene Expression", "Protein Synthesis", "Bone Density", "Muscle Atrophy"][i % 5]}`,
-    abstract: `This comprehensive study examines the effects of prolonged microgravity exposure on biological systems. Our findings reveal significant changes in ${["cellular metabolism", "gene regulation", "protein pathways", "skeletal structure", "muscular tissue"][i % 5]} under space conditions. These results have important implications for long-duration space missions.`,
-    year: 2000 + Math.floor(i / 2),
-    authors: `${["Smith, J.", "Johnson, A.", "Williams, R.", "Brown, M.", "Davis, K."][i % 5]} et al.`,
-    research_area: ["Microgravity Effects", "Radiation Biology", "Plant Biology", "Neuroscience", "Cardiovascular"][i % 5],
-    organism: ["Humans", "Mice", "Plants", "C. elegans", "Drosophila"][i % 5],
-    experiment_type: ["ISS Mission", "Space Shuttle", "Ground Analog", "Parabolic Flight", "Laboratory Study"][i % 5],
-    publication_url: `https://ntrs.nasa.gov/citations/${20240000 + i}`,
-    link: `https://ntrs.nasa.gov/citations/${20240000 + i}`,
-  }));
+  // Fetch publications from database
+  const { data: publications = [], isLoading } = useQuery({
+    queryKey: ["publications", searchQuery, filters],
+    queryFn: async () => {
+      let query = supabase.from("publications").select("*");
+
+      // Apply search filter
+      if (searchQuery) {
+        query = query.ilike("title", `%${searchQuery}%`);
+      }
+
+      const { data, error } = await query.order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching publications:", error);
+        toast.error("Failed to fetch publications");
+        return [];
+      }
+
+      return data as Publication[];
+    },
+  });
 
   // Fetch publications count
   const { data: count } = useQuery({
     queryKey: ["publications-count"],
     queryFn: async () => {
-      if (!supabase) {
-        return 608; // Mock count when no database
-      }
-      
       const { count, error } = await supabase
         .from("publications")
         .select("*", { count: "exact", head: true });
       
       if (error) {
         console.error("Error fetching count:", error);
-        return 608; // Mock count
+        return 0;
       }
-      return count || 608;
+      return count || 0;
     },
   });
-
-  // Apply filters and search to publications
-  const filteredPublications = mockPublications.filter((pub) => {
-    // Search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      const matchesSearch = 
-        pub.title.toLowerCase().includes(query) ||
-        pub.abstract?.toLowerCase().includes(query) ||
-        pub.authors?.toLowerCase().includes(query);
-      
-      if (!matchesSearch) return false;
-    }
-
-    // Year range filter
-    if (filters.yearRange[0] && pub.year && pub.year < filters.yearRange[0]) {
-      return false;
-    }
-    if (filters.yearRange[1] && pub.year && pub.year > filters.yearRange[1]) {
-      return false;
-    }
-
-    // Organism filter
-    if (filters.organisms.length > 0 && pub.organism) {
-      if (!filters.organisms.includes(pub.organism)) return false;
-    }
-
-    // Research area filter
-    if (filters.researchArea.length > 0 && pub.research_area) {
-      if (!filters.researchArea.includes(pub.research_area)) return false;
-    }
-
-    // Experiment type filter
-    if (filters.experimentType.length > 0 && pub.experiment_type) {
-      if (!filters.experimentType.includes(pub.experiment_type)) return false;
-    }
-
-    return true;
-  });
-
-  const publications = filteredPublications;
-  const isLoading = false;
 
   useEffect(() => {
     if (initialQuery) {
