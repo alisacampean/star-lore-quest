@@ -15,7 +15,7 @@ export const Hero = ({ onSearch }: HeroProps) => {
   const handleSpaceshipClick = () => {
     setIsLaunching(true);
     setTimeout(() => {
-      navigate('/topics');
+      navigate('/space-journey');
     }, 1200);
   };
 
