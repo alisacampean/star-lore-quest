@@ -160,8 +160,39 @@ export const AIChat = ({ selectedQuestion, onQuestionHandled }: AIChatProps = {}
                 }`}
               >
                 {message.role === "assistant" ? (
-                  <div className="text-sm leading-relaxed prose prose-invert prose-sm max-w-none prose-headings:text-accent prose-a:text-primary prose-strong:text-accent prose-code:text-primary">
-                    <ReactMarkdown>{message.content}</ReactMarkdown>
+                  <div className="text-sm leading-relaxed prose prose-invert prose-sm max-w-none 
+                    prose-headings:text-accent prose-headings:font-bold prose-headings:mb-3 prose-headings:mt-4
+                    prose-p:my-3 prose-p:leading-7
+                    prose-a:text-primary prose-a:underline prose-a:decoration-primary/50 hover:prose-a:decoration-primary
+                    prose-strong:text-accent prose-strong:font-bold
+                    prose-em:text-primary/90
+                    prose-code:text-primary prose-code:bg-primary/10 prose-code:px-1 prose-code:rounded
+                    prose-ul:my-3 prose-ul:space-y-2 prose-li:my-1
+                    prose-ol:my-3 prose-ol:space-y-2
+                    [&_mark]:bg-primary/30 [&_mark]:text-primary [&_mark]:px-1 [&_mark]:rounded [&_mark]:font-semibold">
+                    <ReactMarkdown
+                      components={{
+                        // Convert ==highlight== to <mark> tags
+                        p: ({ children }) => {
+                          if (typeof children === 'string') {
+                            const parts = children.split(/(==.*?==)/g);
+                            return (
+                              <p>
+                                {parts.map((part, i) => {
+                                  if (part.startsWith('==') && part.endsWith('==')) {
+                                    return <mark key={i}>{part.slice(2, -2)}</mark>;
+                                  }
+                                  return part;
+                                })}
+                              </p>
+                            );
+                          }
+                          return <p>{children}</p>;
+                        }
+                      }}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
                   </div>
                 ) : (
                   <p className="text-sm leading-relaxed">{message.content}</p>
