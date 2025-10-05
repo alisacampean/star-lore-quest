@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Brain, Dna, Beaker, Microscope, Orbit, Radiation, Satellite, Sprout, Rocket, ArrowLeft } from "lucide-react";
+import { Brain, Dna, Beaker, Microscope, Orbit, Radiation, Satellite, Sprout, Rocket as RocketIcon, ArrowLeft } from "lucide-react";
 import earthImg from "@/assets/earth.png";
 import nebula1Img from "@/assets/nebula1.png";
 import nebula2Img from "@/assets/nebula2.png";
-import asteroid1Img from "@/assets/asteroid1.png";
-import asteroid2Img from "@/assets/asteroid2.png";
+import asteroid1Img from "@/assets/asteroid1-transparent.png";
+import asteroid2Img from "@/assets/asteroid2-transparent.png";
+import rocketImg from "@/assets/rocket.png";
 
 interface Topic {
   id: string;
@@ -21,7 +22,7 @@ const topics: Topic[] = [
     id: "start",
     title: "Begin Your Journey",
     description: "Scroll right to explore space biology research →",
-    icon: Rocket,
+    icon: RocketIcon,
     position: 5,
     top: 50
   },
@@ -137,9 +138,20 @@ export default function SpaceJourney() {
   };
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-r from-[#0a0e27] via-[#0f1419] to-[#000000] overflow-hidden">
-      {/* Deep space gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#1a1f3a] via-transparent to-transparent opacity-50" />
+    <div className="fixed inset-0 overflow-hidden">
+      {/* Dynamic background that transitions with scroll */}
+      <div 
+        className="absolute inset-0 transition-all duration-700"
+        style={{
+          background: scrollProgress < 15 
+            ? `linear-gradient(to right, 
+                rgba(59, 130, 246, ${0.3 - scrollProgress * 0.02}) 0%, 
+                rgba(14, 165, 233, ${0.2 - scrollProgress * 0.015}) 25%,
+                rgba(10, 14, 39, ${0.9 + scrollProgress * 0.01}) 50%,
+                #000000 100%)`
+            : '#000000'
+        }}
+      />
       
       {/* Stars background */}
       <div className="absolute inset-0 opacity-40">
@@ -260,23 +272,25 @@ export default function SpaceJourney() {
         style={{
           left: `${20 + (scrollProgress * 6)}%`,
           top: '50%',
-          transform: `translateY(-50%) rotate(-45deg) scale(${1 + scrollProgress / 100})`,
+          transform: `translateY(-50%) scale(${1 + scrollProgress / 100})`,
         }}
       >
         <div className="relative">
-          <Rocket 
-            className="w-20 h-20 text-primary"
+          <img 
+            src={rocketImg}
+            alt="Rocket"
+            className="w-32 h-32 object-contain"
             style={{
               filter: 'drop-shadow(0 0 20px rgba(236, 72, 153, 0.6))'
             }}
           />
           {/* Engine trail */}
           <div 
-            className="absolute right-full top-1/2 -translate-y-1/2 h-3 bg-gradient-to-l from-accent via-primary to-transparent"
+            className="absolute left-0 top-1/2 -translate-y-1/2 h-4 bg-gradient-to-l from-orange-500 via-yellow-400 to-transparent"
             style={{
               width: `${scrollProgress * 3}px`,
-              opacity: scrollProgress > 0 ? 0.7 : 0,
-              filter: 'blur(2px)'
+              opacity: scrollProgress > 0 ? 0.8 : 0,
+              filter: 'blur(3px)'
             }}
           />
         </div>
