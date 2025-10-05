@@ -1,12 +1,15 @@
 import { Brain, Database, Network } from "lucide-react";
 import { SearchBar } from "./SearchBar";
 import heroBg from "@/assets/hero-bg.jpg";
+import { useNavigate } from "react-router-dom";
 
 interface HeroProps {
   onSearch: (query: string) => void;
 }
 
 export const Hero = ({ onSearch }: HeroProps) => {
+  const navigate = useNavigate();
+
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background image */}
@@ -46,15 +49,24 @@ export const Hero = ({ onSearch }: HeroProps) => {
 
           {/* Feature badges */}
           <div className="flex flex-wrap justify-center gap-4 mt-8">
-            <div className="flex items-center gap-2 bg-card/50 px-4 py-2 circuit-frame">
+            <div 
+              onClick={() => navigate('/explorer')}
+              className="flex items-center gap-2 bg-card/50 px-4 py-2 circuit-frame cursor-pointer hover:bg-card/70 transition-colors"
+            >
               <Database className="w-5 h-5 text-primary" />
               <span className="text-sm font-mono">608+ Publications</span>
             </div>
-            <div className="flex items-center gap-2 bg-card/50 px-4 py-2 circuit-frame">
+            <div 
+              onClick={() => navigate('/assistant')}
+              className="flex items-center gap-2 bg-card/50 px-4 py-2 circuit-frame cursor-pointer hover:bg-card/70 transition-colors"
+            >
               <Brain className="w-5 h-5 text-accent" />
               <span className="text-sm font-mono">AI Analysis</span>
             </div>
-            <div className="flex items-center gap-2 bg-card/50 px-4 py-2 circuit-frame">
+            <div 
+              onClick={() => navigate('/knowledge')}
+              className="flex items-center gap-2 bg-card/50 px-4 py-2 circuit-frame cursor-pointer hover:bg-card/70 transition-colors"
+            >
               <Network className="w-5 h-5 text-primary" />
               <span className="text-sm font-mono">Knowledge Graphs</span>
             </div>
