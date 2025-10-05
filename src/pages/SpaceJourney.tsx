@@ -100,6 +100,10 @@ export default function SpaceJourney() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeTopicId, setActiveTopicId] = useState<string | null>(null);
+  const bottomScrollRef = useRef<HTMLDivElement>(null);
+  const [bottomWidth, setBottomWidth] = useState(0);
+  const isSyncingMain = useRef(false);
+  const isSyncingBottom = useRef(false);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -133,7 +137,7 @@ export default function SpaceJourney() {
 
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
-      container.scrollLeft += e.deltaY * 3;
+      container.scrollLeft += e.deltaY * 4;
     };
 
     container.addEventListener('scroll', handleScroll);
@@ -141,6 +145,43 @@ export default function SpaceJourney() {
     return () => {
       container.removeEventListener('scroll', handleScroll);
       container.removeEventListener('wheel', handleWheel);
+    };
+  }, []);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    const bottom = bottomScrollRef.current;
+    if (!container || !bottom) return;
+
+    const updateWidth = () => setBottomWidth(container.scrollWidth);
+    updateWidth();
+
+    const ro = new ResizeObserver(() => updateWidth());
+    ro.observe(container);
+
+    const onMainScroll = () => {
+      if (isSyncingBottom.current) return;
+      isSyncingMain.current = true;
+      bottom.scrollLeft = container.scrollLeft;
+      isSyncingMain.current = false;
+    };
+
+    const onBottomScroll = () => {
+      if (isSyncingMain.current) return;
+      isSyncingBottom.current = true;
+      container.scrollLeft = bottom.scrollLeft;
+      isSyncingBottom.current = false;
+    };
+
+    container.addEventListener('scroll', onMainScroll);
+    bottom.addEventListener('scroll', onBottomScroll);
+    window.addEventListener('resize', updateWidth);
+
+    return () => {
+      ro.disconnect();
+      container.removeEventListener('scroll', onMainScroll);
+      bottom.removeEventListener('scroll', onBottomScroll);
+      window.removeEventListener('resize', updateWidth);
     };
   }, []);
 
@@ -263,29 +304,12 @@ export default function SpaceJourney() {
       {/* Scrollable container - needed for absolute positioned asteroids */}
       <div 
         ref={containerRef}
-        className="w-full h-full overflow-x-auto overflow-y-hidden scroll-smooth pb-4"
-        style={{
-          scrollbarWidth: 'thin',
-          scrollbarColor: 'hsl(var(--primary)) hsl(var(--background))'
+        className="main-scroll w-full h-full overflow-x-auto overflow-y-hidden scroll-smooth"
+        style={{ 
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none'
         }}
       >
-        <style>{`
-          div::-webkit-scrollbar {
-            height: 12px;
-          }
-          div::-webkit-scrollbar-track {
-            background: hsl(var(--background));
-            border-radius: 10px;
-          }
-          div::-webkit-scrollbar-thumb {
-            background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--accent)));
-            border-radius: 10px;
-            border: 2px solid hsl(var(--background));
-          }
-          div::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(to right, hsl(var(--accent)), hsl(var(--primary)));
-          }
-        `}</style>
         
         {/* Wide content area */}
         <div className="relative h-full" style={{ width: '800vw' }}>
@@ -586,6 +610,26 @@ export default function SpaceJourney() {
           Scroll horizontally to explore • Click topics to view publications
         </p>
       </div>
+
+      {/* Persistent bottom scrollbar */}
+      <div className="fixed left-0 right-0 bottom-0 z-50 bg-background/90 backdrop-blur-sm border-t circuit-frame">
+        <div
+          ref={bottomScrollRef}
+          className="custom-scrollbar overflow-x-auto overflow-y-hidden"
+          style={{ height: 16 }}
+        >
+          <div style={{ width: `${bottomWidth}px`, height: 1 }} />
+        </div>
+      </div>
+
+      <style>{`
+        .main-scroll::-webkit-scrollbar { display: none; }
+        .custom-scrollbar { scrollbar-width: thin; }
+        .custom-scrollbar::-webkit-scrollbar { height: 12px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: hsl(var(--background)); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--accent))); border-radius: 10px; border: 2px solid hsl(var(--background)); }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: linear-gradient(to right, hsl(var(--accent)), hsl(var(--primary))); }
+      `}</style>
     </div>
   );
 }
