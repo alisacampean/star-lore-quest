@@ -189,4 +189,24 @@ All colors MUST be HSL.
   .animate-launch {
     animation: launch 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
   }
+
+  /* Float animation for nebulas */
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0) translateX(0);
+    }
+    50% {
+      transform: translateY(-20px) translateX(10px);
+    }
+  }
+
+  /* Rotate animation for asteroids */
+  @keyframes rotate {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
 }

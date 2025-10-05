@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Brain, Dna, Beaker, Microscope, Orbit, Radiation, Satellite, Sprout, Rocket, ArrowLeft } from "lucide-react";
+import earthImg from "@/assets/earth.png";
+import nebula1Img from "@/assets/nebula1.png";
+import nebula2Img from "@/assets/nebula2.png";
+import asteroid1Img from "@/assets/asteroid1.png";
+import asteroid2Img from "@/assets/asteroid2.png";
 
 interface Topic {
   id: string;
@@ -132,9 +137,12 @@ export default function SpaceJourney() {
   };
 
   return (
-    <div className="fixed inset-0 bg-[#000000] overflow-hidden">
+    <div className="fixed inset-0 bg-gradient-to-r from-[#0a0e27] via-[#0f1419] to-[#000000] overflow-hidden">
+      {/* Deep space gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#1a1f3a] via-transparent to-transparent opacity-50" />
+      
       {/* Stars background */}
-      <div className="absolute inset-0 opacity-60">
+      <div className="absolute inset-0 opacity-40">
         <div 
           className="absolute inset-0"
           style={{
@@ -154,6 +162,89 @@ export default function SpaceJourney() {
         />
       </div>
 
+      {/* Earth - Fixed on the left */}
+      <div 
+        className="fixed left-0 top-1/2 -translate-y-1/2 z-20"
+        style={{
+          width: '60vh',
+          height: '60vh',
+          marginLeft: '-30vh'
+        }}
+      >
+        <img 
+          src={earthImg} 
+          alt="Earth" 
+          className="w-full h-full object-cover rounded-full"
+          style={{
+            filter: 'drop-shadow(0 0 60px rgba(59, 130, 246, 0.4))'
+          }}
+        />
+      </div>
+
+      {/* Nebulas - Animated */}
+      <div 
+        className="fixed opacity-20 pointer-events-none z-10"
+        style={{
+          left: '30%',
+          top: '20%',
+          width: '800px',
+          height: '800px',
+          animation: 'float 20s ease-in-out infinite'
+        }}
+      >
+        <img src={nebula1Img} alt="" className="w-full h-full object-contain" />
+      </div>
+      <div 
+        className="fixed opacity-15 pointer-events-none z-10"
+        style={{
+          left: '60%',
+          top: '50%',
+          width: '700px',
+          height: '700px',
+          animation: 'float 25s ease-in-out infinite reverse'
+        }}
+      >
+        <img src={nebula2Img} alt="" className="w-full h-full object-contain" />
+      </div>
+
+      {/* Asteroids - Animated */}
+      <div 
+        className="fixed pointer-events-none z-15"
+        style={{
+          left: '25%',
+          top: '70%',
+          width: '80px',
+          height: '80px',
+          animation: 'rotate 30s linear infinite, float 15s ease-in-out infinite'
+        }}
+      >
+        <img src={asteroid1Img} alt="" className="w-full h-full object-contain opacity-60" />
+      </div>
+      <div 
+        className="fixed pointer-events-none z-15"
+        style={{
+          left: '50%',
+          top: '15%',
+          width: '60px',
+          height: '60px',
+          animation: 'rotate 40s linear infinite reverse, float 20s ease-in-out infinite'
+        }}
+      >
+        <img src={asteroid2Img} alt="" className="w-full h-full object-contain opacity-50" />
+      </div>
+      <div 
+        className="fixed pointer-events-none z-15"
+        style={{
+          left: '80%',
+          top: '60%',
+          width: '70px',
+          height: '70px',
+          animation: 'rotate 35s linear infinite, float 18s ease-in-out infinite'
+        }}
+      >
+        <img src={asteroid1Img} alt="" className="w-full h-full object-contain opacity-55" />
+      </div>
+
       {/* Back button */}
       <button
         onClick={() => navigate('/')}
@@ -163,26 +254,29 @@ export default function SpaceJourney() {
         <span className="font-mono text-sm">Back to Home</span>
       </button>
 
-      {/* Spaceship (moves with scroll) */}
+      {/* Rocket (moves with scroll from Earth) */}
       <div 
-        className="fixed left-12 top-1/2 -translate-y-1/2 z-40 transition-transform duration-300"
+        className="fixed z-40 transition-all duration-300"
         style={{
-          transform: `translate(${scrollProgress * 8}px, -50%) rotate(-15deg)`
+          left: `${20 + (scrollProgress * 6)}%`,
+          top: '50%',
+          transform: `translateY(-50%) rotate(-45deg) scale(${1 + scrollProgress / 100})`,
         }}
       >
         <div className="relative">
           <Rocket 
-            className="w-16 h-16 text-primary drop-shadow-[0_0_20px_rgba(236,72,153,0.6)]"
+            className="w-20 h-20 text-primary"
             style={{
               filter: 'drop-shadow(0 0 20px rgba(236, 72, 153, 0.6))'
             }}
           />
           {/* Engine trail */}
           <div 
-            className="absolute left-full top-1/2 -translate-y-1/2 h-2 bg-gradient-to-r from-accent to-transparent"
+            className="absolute right-full top-1/2 -translate-y-1/2 h-3 bg-gradient-to-l from-accent via-primary to-transparent"
             style={{
-              width: `${scrollProgress * 2}px`,
-              opacity: scrollProgress > 0 ? 0.6 : 0
+              width: `${scrollProgress * 3}px`,
+              opacity: scrollProgress > 0 ? 0.7 : 0,
+              filter: 'blur(2px)'
             }}
           />
         </div>
