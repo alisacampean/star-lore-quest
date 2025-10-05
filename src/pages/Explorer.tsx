@@ -42,19 +42,22 @@ const Explorer = () => {
         query = query.lte("year", filters.yearRange[1]);
       }
 
-      // Apply organism filter
+      // Apply organism filter with case-insensitive matching
       if (filters.organisms.length > 0) {
-        query = query.in("organism", filters.organisms);
+        const organismConditions = filters.organisms.map(org => `organism.ilike.%${org}%`).join(',');
+        query = query.or(organismConditions);
       }
 
-      // Apply research area filter
+      // Apply research area filter with case-insensitive matching
       if (filters.researchArea.length > 0) {
-        query = query.in("research_area", filters.researchArea);
+        const areaConditions = filters.researchArea.map(area => `research_area.ilike.%${area}%`).join(',');
+        query = query.or(areaConditions);
       }
 
-      // Apply experiment type filter
+      // Apply experiment type filter with case-insensitive matching
       if (filters.experimentType.length > 0) {
-        query = query.in("experiment_type", filters.experimentType);
+        const typeConditions = filters.experimentType.map(type => `experiment_type.ilike.%${type}%`).join(',');
+        query = query.or(typeConditions);
       }
 
       const { data, error } = await query.order("created_at", { ascending: false }).limit(100);
