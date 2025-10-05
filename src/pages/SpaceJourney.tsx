@@ -133,7 +133,7 @@ export default function SpaceJourney() {
 
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
-      container.scrollLeft += e.deltaY;
+      container.scrollLeft += e.deltaY * 3;
     };
 
     container.addEventListener('scroll', handleScroll);
@@ -264,7 +264,28 @@ export default function SpaceJourney() {
       <div 
         ref={containerRef}
         className="w-full h-full overflow-x-auto overflow-y-hidden scroll-smooth pb-4"
+        style={{
+          scrollbarWidth: 'thin',
+          scrollbarColor: 'hsl(var(--primary)) hsl(var(--background))'
+        }}
       >
+        <style>{`
+          div::-webkit-scrollbar {
+            height: 12px;
+          }
+          div::-webkit-scrollbar-track {
+            background: hsl(var(--background));
+            border-radius: 10px;
+          }
+          div::-webkit-scrollbar-thumb {
+            background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--accent)));
+            border-radius: 10px;
+            border: 2px solid hsl(var(--background));
+          }
+          div::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(to right, hsl(var(--accent)), hsl(var(--primary)));
+          }
+        `}</style>
         
         {/* Wide content area */}
         <div className="relative h-full" style={{ width: '800vw' }}>
