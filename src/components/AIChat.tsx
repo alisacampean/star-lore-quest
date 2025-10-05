@@ -163,7 +163,7 @@ export const AIChat = ({ selectedQuestion, onQuestionHandled }: AIChatProps = {}
                   <div className="text-sm leading-relaxed prose prose-invert prose-sm max-w-none 
                     prose-headings:text-accent prose-headings:font-bold prose-headings:mb-3 prose-headings:mt-4
                     prose-p:my-3 prose-p:leading-7 prose-p:text-white
-                    prose-a:bg-primary prose-a:text-background prose-a:font-bold prose-a:px-2 prose-a:py-0.5 prose-a:rounded prose-a:no-underline hover:prose-a:bg-primary/80
+                    prose-a:bg-primary/20 prose-a:text-primary prose-a:font-bold prose-a:px-2 prose-a:py-0.5 prose-a:rounded prose-a:no-underline hover:prose-a:bg-primary/30 prose-a:after:content-['_🔗']
                     prose-strong:text-primary prose-strong:font-bold
                     prose-em:text-white
                     prose-code:text-primary prose-code:bg-primary/10 prose-code:px-1 prose-code:rounded
